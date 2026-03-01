@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SYSTEM BREACH — ctrl-Nix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=VT323&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --void:#000308;
+  --abyss:#010510;
+  --deep:#030B18;
+  --panel:#060F20;
+  --panel2:#08132A;
+  --glass:rgba(6,15,32,0.85);
+  /* CYBERPUNK PALETTE */
+  --amber:#FFB300;
+  --amber2:#FF8C00;
+  --amber-glow:rgba(255,179,0,0.15);
+  --blue:#00D4FF;
+  --blue2:#0099CC;
+  --blue-glow:rgba(0,212,255,0.12);
+  --violet:#8B5CF6;
+  --violet2:#6D28D9;
+  --red:#FF2D55;
+  --red2:#CC0033;
+  --teal:#00FFD4;
+  --white:#E8F4FF;
+  --dim:#4A6080;
+  --dim2:#1A2A3A;
+  --mono:'Share Tech Mono',monospace;
+  --display:'Orbitron',sans-serif;
+  --vt:'VT323',monospace;
+  --body:'Rajdhani',sans-serif;
+  --bebas:'Bebas Neue',cursive;
+}
+html{overflow-x:hidden;scroll-behavior:smooth}
+body{
+  background:var(--void);
+  color:var(--white);
+  font-family:var(--body);
+  overflow-x:hidden;
+  cursor:none;
+  min-height:100vh;
+}
+
+/* ══ CURSOR ══ */
+#CUR{position:fixed;top:0;left:0;z-index:99999;pointer-events:none}
+#c1{position:absolute;width:6px;height:6px;background:var(--amber);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px var(--amber),0 0 30px rgba(255,179,0,.5)}
+#c2{position:absolute;width:32px;height:32px;border:1px solid var(--amber);transform:translate(-50%,-50%) rotate(45deg);transition:all .2s cubic-bezier(.2,0,.2,1);box-shadow:0 0 8px rgba(255,179,0,.3)}
+#c2::before,#c2::after{content:'';position:absolute;background:var(--amber)}
+#c2::before{width:6px;height:1px;top:50%;left:-9px;transform:translateY(-50%)}
+#c2::after{width:6px;height:1px;top:50%;right:-9px;transform:translateY(-50%)}
+body.hov #c2{width:52px;height:52px;border-color:var(--blue);box-shadow:0 0 15px rgba(0,212,255,.4)}
+body.hov #c1{background:var(--blue);box-shadow:0 0 12px var(--blue)}
+@media(pointer:coarse){body{cursor:auto}#CUR{display:none}}
+
+/* ══ AMBIENT LAYERS ══ */
+#canvas-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#canvas-particles{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.6}
+.scanlines{position:fixed;inset:0;z-index:9990;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,8,.06) 2px,rgba(0,0,8,.06) 4px);animation:scanMove 8s linear infinite}
+@keyframes scanMove{0%{background-position:0 0}100%{background-position:0 100px}}
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 80% 75% at 50% 50%,transparent 30%,rgba(0,3,8,.8) 100%)}
+.grain{position:fixed;inset:0;z-index:9991;pointer-events:none;opacity:.25;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='.05'/%3E%3C/svg%3E")}
+
+/* ══ CHROMATIC ABERRATION OVERLAY ══ */
+.chroma{position:fixed;inset:0;z-index:9992;pointer-events:none;mix-blend-mode:screen;opacity:0;animation:chromaFlash 12s ease-in-out infinite}
+@keyframes chromaFlash{0%,92%,100%{opacity:0}93%{opacity:.04}95%{opacity:0}97%{opacity:.03}99%{opacity:0}}
+
+/* ══════════════════════════════════
+   INTRO — CINEMATIC SEQUENCE
+══════════════════════════════════ */
+#INTRO{
+  position:fixed;inset:0;z-index:9500;
+  background:#000;
+  overflow:hidden;
+}
+#intro-canvas{position:absolute;inset:0}
+
+/* Phase 1: static noise */
+.static-overlay{
+  position:absolute;inset:0;z-index:5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.9' numOctaves='1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:0;pointer-events:none;mix-blend-mode:screen;
+  animation:staticFlash 0.08s step-end 8 0.2s;
+}
+@keyframes staticFlash{0%,100%{opacity:0}50%{opacity:.15;filter:hue-rotate(90deg)}}
+
+/* RED ALERT VIGNETTE */
+#alert-ring{
+  position:absolute;inset:0;z-index:4;
+  box-shadow:inset 0 0 200px rgba(255,45,85,.5);
+  opacity:0;pointer-events:none;
+}
+
+/* SCAN LINE */
+#scan{
+  position:absolute;left:0;right:0;height:3px;z-index:20;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,179,0,.3) 20%,var(--amber) 50%,rgba(255,179,0,.3) 80%,transparent 100%);
+  box-shadow:0 0 20px var(--amber),0 0 60px rgba(255,179,0,.4),0 0 120px rgba(255,179,0,.2);
+  opacity:0;top:-3px;pointer-events:none;
+}
+
+/* HACKED TEXT */
+#hack-center{
+  position:absolute;inset:0;z-index:15;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;
+}
+#h-title{
+  font-family:var(--bebas);
+  font-size:clamp(56px,14vw,200px);
+  color:var(--red);
+  letter-spacing:8px;
+  line-height:.9;
+  text-shadow:0 0 60px var(--red),0 0 120px rgba(255,45,85,.4);
+  opacity:0;transform:scale(1.3);
+  transition:all .0s;
+  position:relative;
+  display:inline-block;
+}
+#h-title::before{
+  content:'YOU HAVE BEEN HACKED';
+  position:absolute;inset:0;
+  color:var(--blue);
+  clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%);
+  opacity:0;animation:hGlitch1 4s ease 2s infinite;
+  left:4px;
+}
+#h-title::after{
+  content:'YOU HAVE BEEN HACKED';
+  position:absolute;inset:0;
+  color:var(--teal);
+  clip-path:polygon(0 65%,100% 65%,100% 80%,0 80%);
+  opacity:0;animation:hGlitch2 4s ease 2.3s infinite;
+  left:-4px;
+}
+@keyframes hGlitch1{0%,80%,100%{opacity:0}82%{opacity:.9;transform:translateX(-6px)}85%{opacity:0}}
+@keyframes hGlitch2{0%,76%,100%{opacity:0}78%{opacity:.7;transform:translateX(6px)}81%{opacity:0}}
+
+#h-sub{font-family:var(--mono);font-size:clamp(11px,1.8vw,16px);color:rgba(255,179,0,.8);letter-spacing:5px;margin-top:20px;opacity:0}
+#h-sub2{font-family:var(--mono);font-size:clamp(9px,1.4vw,13px);color:rgba(0,212,255,.5);letter-spacing:3px;margin-top:8px;opacity:0}
+#h-line{width:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:28px auto;transition:width 1s ease;box-shadow:0 0 10px var(--amber)}
+
+#h-cta{
+  opacity:0;transform:translateY(16px);
+  transition:opacity .5s,transform .5s;
+}
+#h-btn{
+  font-family:var(--bebas);
+  font-size:clamp(20px,3.5vw,32px);
+  letter-spacing:5px;
+  color:var(--void);
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  border:none;cursor:pointer;
+  padding:16px 52px;
+  clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);
+  position:relative;overflow:hidden;
+  box-shadow:0 0 40px rgba(255,179,0,.5),0 0 100px rgba(255,179,0,.2);
+  animation:btnHum 2s ease-in-out infinite;
+  transition:all .2s;
+}
+@keyframes btnHum{0%,100%{box-shadow:0 0 40px rgba(255,179,0,.5),0 0 100px rgba(255,179,0,.2)}50%{box-shadow:0 0 60px rgba(255,179,0,.8),0 0 140px rgba(255,179,0,.35)}}
+#h-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.3),transparent);opacity:0;transition:opacity .2s}
+#h-btn:hover{transform:scale(1.04);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+#h-btn:hover::before{opacity:1}
+.btn-corner{position:absolute;width:8px;height:8px;border-color:var(--amber);border-style:solid;opacity:.6}
+.bc-tl{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.bc-tr{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.bc-bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px}
+.bc-br{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+
+/* Intro corner decorations */
+.ic{position:absolute;width:60px;height:60px;border-color:rgba(255,179,0,.4);border-style:solid}
+.ic-tl{top:16px;left:16px;border-width:2px 0 0 2px}
+.ic-tr{top:16px;right:16px;border-width:2px 2px 0 0}
+.ic-bl{bottom:16px;left:16px;border-width:0 0 2px 2px}
+.ic-br{bottom:16px;right:16px;border-width:0 2px 2px 0}
+
+/* intro progress bar */
+#iprog{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,179,0,.1)}
+#ibar{height:100%;width:0;background:linear-gradient(90deg,var(--amber2),var(--amber),var(--blue));box-shadow:0 0 10px var(--amber);transition:none}
+
+/* ══════════════════════════════════
+   PAGE WIPE TRANSITION
+══════════════════════════════════ */
+#WIPE{position:fixed;inset:0;z-index:8000;display:grid;grid-template-rows:repeat(8,1fr);pointer-events:none}
+.wstripe{background:var(--panel2);transform:scaleX(0)}
+
+/* ══════════════════════════════════
+   NAV
+══════════════════════════════════ */
+#NAV{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  height:56px;display:flex;align-items:center;padding:0 32px;gap:0;
+  background:rgba(1,5,16,.9);
+  border-bottom:1px solid rgba(255,179,0,.12);
+  backdrop-filter:blur(20px);
+  transform:translateY(-100%);transition:transform .6s cubic-bezier(.2,0,.2,1);
+}
+#NAV.up{transform:translateY(0)}
+.nlogo{font-family:var(--display);font-size:13px;font-weight:900;color:var(--amber);letter-spacing:3px;margin-right:auto;display:flex;align-items:center;gap:10px;text-shadow:0 0 20px var(--amber);flex-shrink:0}
+.logo-dot{width:7px;height:7px;background:var(--amber);border-radius:50%;box-shadow:0 0 12px var(--amber);animation:logoPulse 2s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.5);opacity:.3}}
+.nlinks{display:flex;flex-shrink:0}
+.nl{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--dim);padding:0 16px;height:56px;display:flex;align-items:center;cursor:pointer;border:none;background:none;transition:color .2s;position:relative;white-space:nowrap}
+.nl::after{content:'';position:absolute;bottom:0;left:10px;right:10px;height:1px;background:var(--amber);transform:scaleX(0);transition:transform .25s;box-shadow:0 0 8px var(--amber)}
+.nl:hover,.nl.on{color:var(--amber)}
+.nl:hover::after,.nl.on::after{transform:scaleX(1)}
+.nright{display:flex;align-items:center;gap:16px;border-left:1px solid var(--dim2);padding-left:16px;flex-shrink:0}
+.ntime{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2px}
+@media(max-width:700px){.nlinks{display:none}}
+
+/* ══ BACK BUTTON ══ */
+#BACK{
+  position:fixed;bottom:24px;left:24px;z-index:1100;
+  font-family:var(--mono);font-size:9px;color:var(--amber);
+  border:1px solid rgba(255,179,0,.25);background:rgba(1,5,16,.9);
+  padding:10px 20px;cursor:pointer;letter-spacing:3px;
+  display:none;align-items:center;gap:8px;
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+  transition:all .2s;backdrop-filter:blur(10px);
+}
+#BACK:hover{border-color:var(--amber);background:rgba(255,179,0,.08);box-shadow:0 0 20px rgba(255,179,0,.2)}
+#BACK.show{display:flex}
+.back-ico{animation:backPulse 2s ease-in-out infinite}
+@keyframes backPulse{0%,100%{transform:translateX(0)}50%{transform:translateX(-3px)}}
+
+/* ══════════════════════════════════
+   PAGES
+══════════════════════════════════ */
+.page{display:none;position:relative;z-index:10;min-height:100vh;padding-top:56px}
+.page.on{display:block}
+
+/* ══════════════════════════════════
+   HOME — RPG MISSION SCREEN
+══════════════════════════════════ */
+#PH{display:none;min-height:100vh;position:relative;z-index:10;padding-top:56px}
+#PH.on{display:block}
+
+/* HERO PARALLAX */
+.hero-parallax{
+  position:relative;min-height:calc(100vh - 56px);
+  display:flex;align-items:center;overflow:hidden;
+}
+
+/* Circuit board background */
+.circuit-bg{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,179,0,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,179,0,.03) 1px,transparent 1px),
+    linear-gradient(rgba(0,212,255,.015) 2px,transparent 2px),
+    linear-gradient(90deg,rgba(0,212,255,.015) 2px,transparent 2px);
+  background-size:48px 48px,48px 48px,240px 240px,240px 240px;
+  mask-image:radial-gradient(ellipse 70% 80% at 50% 50%,black 40%,transparent 100%);
+}
+
+/* Big atmospheric number */
+.hero-num{
+  position:absolute;right:-2%;top:50%;transform:translateY(-50%);
+  font-family:var(--bebas);
+  font-size:clamp(200px,30vw,500px);
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,179,0,.04);
+  pointer-events:none;user-select:none;
+  line-height:1;letter-spacing:-10px;z-index:2;
+  animation:numDrift 14s ease-in-out infinite alternate;
+}
+@keyframes numDrift{0%{letter-spacing:-10px;opacity:.5}100%{letter-spacing:4px;opacity:.3}}
+
+.hero-inner{
+  position:relative;z-index:5;
+  padding:0 80px;max-width:1400px;margin:0 auto;width:100%;
+}
+@media(max-width:700px){.hero-inner{padding:0 24px}}
+
+/* RPG HEADER */
+.rpg-header{
+  display:flex;align-items:center;gap:14px;margin-bottom:32px;
+  animation:slideIn .5s .1s both;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.rpg-tag{
+  font-family:var(--mono);font-size:8px;letter-spacing:6px;
+  color:var(--void);background:var(--amber);
+  padding:4px 12px;
+  clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);
+  animation:tagBlink 3s step-end infinite;
+}
+@keyframes tagBlink{0%,100%{opacity:1}90%{opacity:1}91%{opacity:.3}93%{opacity:1}}
+.rpg-tag-line{flex:1;height:1px;background:linear-gradient(90deg,var(--amber),transparent);max-width:80px;box-shadow:0 0 8px var(--amber)}
+.rpg-sys{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:4px}
+
+/* HERO NAME */
+.hero-name{
+  font-family:var(--bebas);
+  font-size:clamp(54px,11vw,160px);
+  line-height:.88;letter-spacing:2px;
+  color:var(--white);
+  margin-bottom:4px;
+  animation:heroReveal .8s .2s both cubic-bezier(.15,0,.2,1);
+}
+@keyframes heroReveal{from{opacity:0;transform:translateY(50px) skewY(2deg) scale(.97)}to{opacity:1;transform:none}}
+.hn-g{
+  color:transparent;
+  -webkit-text-stroke:2px rgba(255,179,0,.2);
+  display:block;
+}
+.hn-accent{
+  color:var(--amber);
+  -webkit-text-stroke:0;
+  text-shadow:0 0 40px var(--amber),0 0 100px rgba(255,179,0,.3);
+}
+
+/* HANDLE */
+.hero-handle{
+  font-family:var(--vt);
+  font-size:clamp(28px,5vw,52px);
+  color:var(--blue);
+  letter-spacing:8px;
+  text-shadow:0 0 25px var(--blue),0 0 60px rgba(0,212,255,.3);
+  margin-bottom:28px;
+  animation:fadeSlide .5s .4s both;
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* BIO */
+.hero-bio{
+  font-family:var(--body);
+  font-size:clamp(15px,1.8vw,20px);
+  font-weight:400;
+  color:rgba(232,244,255,.55);
+  line-height:1.9;max-width:560px;margin-bottom:40px;
+  border-left:2px solid rgba(255,179,0,.25);
+  padding-left:20px;
+  animation:fadeSlide .5s .5s both;
+}
+.bio-hl{color:var(--white);font-weight:600}
+.bio-c{color:var(--blue)}
+.bio-a{color:var(--amber)}
+.bio-v{color:var(--violet)}
+
+/* RPG STAT BAR */
+.stat-bar{
+  display:flex;gap:0;margin-bottom:44px;
+  border:1px solid rgba(255,179,0,.1);
+  background:rgba(6,15,32,.6);
+  animation:fadeSlide .5s .55s both;overflow:hidden;
+  flex-wrap:wrap;
+}
+.stat-item{
+  padding:12px 18px;border-right:1px solid rgba(255,179,0,.07);
+  font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2px;
+  display:flex;align-items:center;gap:8px;transition:background .2s;
+  flex-shrink:0;
+}
+.stat-item:hover{background:rgba(255,179,0,.04)}
+.stat-item:last-child{border-right:none}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.s-a{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:logoPulse 2s infinite}
+.s-b{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+.s-v{background:var(--violet);box-shadow:0 0 8px var(--violet);animation:logoPulse 2.5s infinite}
+.s-t{background:var(--teal);box-shadow:0 0 8px var(--teal)}
+
+/* MISSION CARDS */
+.mission-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1px;
+  background:rgba(255,179,0,.06);
+  animation:fadeSlide .5s .65s both;
+}
+.mcard{
+  background:var(--deep);padding:22px 20px;
+  cursor:pointer;border:none;text-align:left;color:inherit;
+  transition:background .25s;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:5px;
+}
+.mcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,var(--amber),transparent);transform:scaleY(0);transition:transform .35s;box-shadow:0 0 10px var(--amber)}
+.mcard:hover::before{transform:scaleY(1)}
+.mcard:hover{background:var(--panel)}
+.mcard::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,179,0,.04),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none}
+.mcard:hover::after{opacity:1}
+.mc-id{font-family:var(--vt);font-size:44px;color:rgba(255,179,0,.08);line-height:1;transition:color .2s}
+.mcard:hover .mc-id{color:rgba(255,179,0,.2)}
+.mc-cat{font-family:var(--mono);font-size:7px;color:rgba(0,212,255,.5);letter-spacing:3px}
+.mc-title{font-family:var(--display);font-size:11px;font-weight:700;color:var(--white);letter-spacing:-.3px;transition:color .2s}
+.mcard:hover .mc-title{color:var(--amber)}
+.mc-sub{font-size:11px;color:var(--dim);font-family:var(--mono);font-size:9px}
+
+/* SCROLL HINT */
+.scroll-h{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;z-index:10;animation:fadeSlide 1s 2s both}
+.sh-t{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:4px}
+.sh-l{width:1px;height:44px;background:linear-gradient(180deg,var(--amber),transparent);position:relative;overflow:hidden}
+.sh-l::after{content:'';position:absolute;top:-100%;width:100%;height:60%;background:var(--amber);box-shadow:0 0 6px var(--amber);animation:scrollLine 1.8s ease-in infinite}
+@keyframes scrollLine{0%{top:-60%}100%{top:160%}}
+
+/* ══════════════════════════════════
+   SECTION COMMONS
+══════════════════════════════════ */
+.sec{padding:80px 64px;max-width:1200px;margin:0 auto}
+@media(max-width:700px){.sec{padding:50px 20px}}
+
+.eyebrow{font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:6px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'//';color:rgba(255,179,0,.4)}
+.sec-h{font-family:var(--bebas);font-size:clamp(44px,6vw,80px);letter-spacing:2px;color:var(--white);margin-bottom:10px;line-height:1}
+.sec-h .a{color:var(--amber)}
+.sec-h .b{color:var(--blue)}
+.sec-sub{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:1px;max-width:480px;line-height:1.8;margin-bottom:48px}
+.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(255,179,0,.2),transparent);margin-bottom:48px}
+
+/* ══════════════════════════════════
+   DOSSIER PAGE
+══════════════════════════════════ */
+#PA{background:linear-gradient(180deg,var(--abyss),var(--deep))}
+.about-grid{display:grid;grid-template-columns:1fr 380px;gap:56px;align-items:start}
+@media(max-width:1000px){.about-grid{grid-template-columns:1fr}}
+
+.ab-p{font-family:var(--body);font-size:16px;color:rgba(232,244,255,.5);line-height:2;margin-bottom:20px;font-weight:400}
+.ab-p strong{color:var(--white);font-weight:700}
+.ab-p .a{color:var(--amber)}
+.ab-p .b{color:var(--blue)}
+.ab-p .v{color:var(--violet)}
+
+/* RPG SKILL BARS */
+.sk-h{font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:4px;margin:32px 0 20px}
+.skill{margin-bottom:18px}
+.sk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sk-n{font-family:var(--mono);font-size:10px;color:var(--white);letter-spacing:1px}
+.sk-p{font-family:var(--vt);font-size:22px;color:var(--amber);line-height:1}
+.sk-track{height:2px;background:var(--dim2);position:relative;overflow:visible}
+.sk-fill{height:100%;width:0;background:linear-gradient(90deg,var(--amber2),var(--amber),var(--blue));box-shadow:0 0 12px rgba(255,179,0,.5);transition:width 2s cubic-bezier(.4,0,.2,1);position:relative}
+.sk-fill::after{content:'';position:absolute;right:-3px;top:50%;width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue),0 0 20px var(--blue);transform:translateY(-50%);opacity:0;transition:opacity .5s .5s}
+.sk-fill.go{width:var(--w)}.sk-fill.go::after{opacity:1}
+
+/* TERMINAL CARD */
+.tcard{background:var(--deep);border:1px solid rgba(255,179,0,.1);overflow:hidden;position:relative}
+.tcard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber),var(--blue),transparent)}
+.thead{background:var(--panel);padding:12px 16px;border-bottom:1px solid rgba(255,179,0,.06);display:flex;align-items:center;gap:6px}
+.tdot{width:10px;height:10px;border-radius:50%}
+.dr{background:#FF5F57}.dy{background:#FFBD2E}.dg{background:#27C93F}
+.ttitle{flex:1;text-align:center;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2px}
+.tbody{padding:18px;font-family:var(--mono);font-size:11px;line-height:2.1}
+.tl{color:rgba(232,244,255,.4)}
+.tl.ta{color:var(--amber);text-shadow:0 0 8px rgba(255,179,0,.3)}
+.tl.tb{color:var(--blue)}.tl.tv{color:var(--violet)}.tl.ty{color:var(--teal)}.tl.dim{color:var(--dim)}
+.tl.cmd::before{content:'$ ';color:rgba(255,179,0,.4)}
+.tcaret{display:inline-block;width:7px;height:13px;background:var(--amber);vertical-align:text-bottom;animation:cBlink 1s step-end infinite;box-shadow:0 0 8px var(--amber)}
+@keyframes cBlink{50%{opacity:0}}
+
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tag{font-family:var(--mono);font-size:8px;letter-spacing:2px;padding:5px 12px;border:1px solid;transition:all .2s;cursor:default}
+.t-a{border-color:rgba(255,179,0,.2);color:var(--amber)}.t-a:hover{background:rgba(255,179,0,.07)}
+.t-b{border-color:rgba(0,212,255,.2);color:var(--blue)}.t-b:hover{background:rgba(0,212,255,.07)}
+.t-v{border-color:rgba(139,92,246,.2);color:var(--violet)}.t-v:hover{background:rgba(139,92,246,.07)}
+.t-t{border-color:rgba(0,255,212,.2);color:var(--teal)}
+
+/* ══════════════════════════════════
+   OPERATIONS PAGE
+══════════════════════════════════ */
+#PP{background:var(--abyss)}
+.proj-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,179,0,.06);margin-bottom:1px}
+.proj-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,179,0,.06)}
+@media(max-width:860px){.proj-grid-2,.proj-grid-3{grid-template-columns:1fr}}
+.pcard{
+  background:var(--abyss);padding:32px 28px;cursor:pointer;
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+  border:none;text-align:left;color:inherit;transition:background .25s;
+}
+.pcard:hover{background:var(--deep)}
+.pcard::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,179,0,.04),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none}
+.pcard:hover::before{opacity:1}
+.pcard::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,var(--amber),transparent);transform:scaleY(0);transition:transform .4s;box-shadow:0 0 12px var(--amber)}
+.pcard:hover::after{transform:scaleY(1)}
+.pcard.pb::after{background:linear-gradient(180deg,transparent,var(--blue),transparent);box-shadow:0 0 12px var(--blue)}
+.pcard.pv::after{background:linear-gradient(180deg,transparent,var(--violet),transparent);box-shadow:0 0 12px var(--violet)}
+.p-num{font-family:var(--vt);font-size:64px;color:rgba(255,179,0,.06);line-height:1;margin-bottom:12px;transition:color .2s}
+.pcard:hover .p-num{color:rgba(255,179,0,.18)}
+.p-cat{font-family:var(--mono);font-size:8px;color:rgba(0,212,255,.5);letter-spacing:3px;margin-bottom:8px}
+.p-title{font-family:var(--display);font-size:17px;font-weight:700;color:var(--white);margin-bottom:12px;line-height:1.2;transition:color .2s}
+.pcard:hover .p-title{color:var(--amber)}
+.p-desc{font-size:13px;color:rgba(232,244,255,.4);line-height:1.9;margin-bottom:16px;font-family:var(--body);flex:1}
+.p-tech{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.tech{font-family:var(--mono);font-size:8px;padding:3px 9px;background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.1);color:var(--amber);letter-spacing:1px}
+.tech.b{background:rgba(0,212,255,.04);border-color:rgba(0,212,255,.1);color:var(--blue)}
+.tech.v{background:rgba(139,92,246,.04);border-color:rgba(139,92,246,.1);color:var(--violet)}
+.p-chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-family:var(--mono);font-size:8px;padding:3px 9px;border:1px solid var(--dim2);color:var(--dim);transition:all .2s}
+.pcard:hover .chip{border-color:rgba(255,179,0,.15);color:rgba(255,179,0,.4)}
+.p-link{position:absolute;top:18px;right:18px;font-family:var(--mono);font-size:9px;color:var(--dim);transition:color .2s}
+.pcard:hover .p-link{color:var(--amber)}
+
+/* ══════════════════════════════════
+   RUBBER DUCKY PAGE
+══════════════════════════════════ */
+#PRD{background:linear-gradient(180deg,var(--abyss),var(--deep))}
+.rd-layout{display:grid;grid-template-columns:340px 1fr;gap:32px;align-items:start}
+@media(max-width:960px){.rd-layout{grid-template-columns:1fr}}
+
+/* DUCKY VISUAL */
+.ducky-panel{
+  background:var(--deep);
+  border:1px solid rgba(255,179,0,.12);
+  padding:28px;position:sticky;top:80px;
+  overflow:hidden;
+}
+.ducky-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+
+.ducky-ascii{
+  font-family:var(--mono);
+  font-size:clamp(8px,1.2vw,12px);
+  color:var(--amber);
+  text-shadow:0 0 10px rgba(255,179,0,.4);
+  line-height:1.3;margin-bottom:20px;
+  animation:duckGlow 3s ease-in-out infinite alternate;
+  white-space:pre;
+}
+@keyframes duckGlow{0%{text-shadow:0 0 10px rgba(255,179,0,.4)}100%{text-shadow:0 0 20px rgba(255,179,0,.8),0 0 40px rgba(255,179,0,.4)}}
+
+.ducky-name{font-family:var(--bebas);font-size:36px;letter-spacing:3px;color:var(--amber);text-shadow:0 0 20px var(--amber);margin-bottom:4px}
+.ducky-tagline{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:20px}
+
+.d-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.d-stat{background:var(--panel);padding:10px 12px;border:1px solid var(--dim2)}
+.d-stat-label{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:2px;margin-bottom:4px}
+.d-stat-val{font-family:var(--vt);font-size:24px;color:var(--amber);line-height:1}
+
+.threat-bar{margin-bottom:8px}
+.tb-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.tb-label{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:1px}
+.tb-val{font-family:var(--mono);font-size:9px;color:var(--amber)}
+.tb-track{height:3px;background:var(--dim2);border-radius:2px}
+.tb-fill{height:100%;border-radius:2px;box-shadow:0 0 6px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.fill-a{background:var(--amber);box-shadow:0 0 6px var(--amber);width:0}
+.fill-b{background:var(--red);box-shadow:0 0 6px var(--red);width:0}
+.fill-c{background:var(--teal);box-shadow:0 0 6px var(--teal);width:0}
+.fill-a.go{width:95%}.fill-b.go{width:88%}.fill-c.go{width:82%}
+
+/* DEMO SECTION */
+.demo-area{display:flex;flex-direction:column;gap:24px}
+
+/* STEP CARD */
+.step-card{
+  background:var(--deep);border:1px solid rgba(255,179,0,.08);
+  overflow:hidden;position:relative;
+  transition:border-color .2s;
+}
+.step-card.active-step{border-color:rgba(255,179,0,.3);box-shadow:0 0 20px rgba(255,179,0,.06)}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,179,0,.3),transparent);opacity:0;transition:opacity .2s}
+.step-card.active-step::before{opacity:1}
+
+.step-header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px;cursor:pointer;
+  border-bottom:1px solid transparent;transition:border-color .2s;
+}
+.step-card.active-step .step-header{border-bottom-color:rgba(255,179,0,.08)}
+.step-num{
+  font-family:var(--vt);font-size:36px;color:var(--amber);
+  line-height:1;width:36px;flex-shrink:0;text-shadow:0 0 10px var(--amber);
+}
+.step-info{flex:1}
+.step-title{font-family:var(--display);font-size:13px;font-weight:700;color:var(--white);letter-spacing:.5px}
+.step-sub{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:3px}
+.step-badge{
+  font-family:var(--mono);font-size:8px;letter-spacing:2px;
+  padding:4px 10px;
+  clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);
+  flex-shrink:0;
+}
+.badge-a{background:rgba(255,179,0,.12);color:var(--amber);border:1px solid rgba(255,179,0,.2)}
+.badge-b{background:rgba(255,45,85,.12);color:var(--red);border:1px solid rgba(255,45,85,.2)}
+.badge-t{background:rgba(0,255,212,.08);color:var(--teal);border:1px solid rgba(0,255,212,.15)}
+
+.step-body{
+  display:none;padding:20px;
+  animation:stepReveal .3s ease;
+}
+@keyframes stepReveal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.step-card.active-step .step-body{display:block}
+
+.step-explain{
+  font-size:14px;color:rgba(232,244,255,.55);line-height:1.9;
+  margin-bottom:16px;font-family:var(--body);
+  border-left:2px solid rgba(255,179,0,.2);padding-left:16px;
+}
+.step-explain strong{color:var(--white)}
+.step-explain .hl{color:var(--amber);font-weight:600}
+.step-explain .hlb{color:var(--blue);font-weight:600}
+.step-explain .hlr{color:var(--red);font-weight:600}
+
+/* PAYLOAD DISPLAY */
+.payload-box{
+  background:var(--void);border:1px solid rgba(255,179,0,.1);
+  padding:16px 18px;margin-bottom:16px;position:relative;
+  font-family:var(--mono);font-size:11px;
+}
+.payload-box::before{content:attr(data-l);position:absolute;top:-9px;left:12px;background:var(--void);padding:0 8px;font-size:8px;color:var(--amber);letter-spacing:2px}
+.pl-line{line-height:2.1;word-break:break-all}
+.pl-k{color:var(--dim)}.pl-v{color:var(--amber)}.pl-c{color:var(--blue)}.pl-r{color:var(--red)}.pl-s{color:var(--teal)}.pl-w{color:var(--white)}
+
+/* LIVE DEMO CHAT */
+.chat-demo{background:var(--void);border:1px solid rgba(255,179,0,.1);overflow:hidden}
+.chat-bar{
+  background:var(--panel);padding:12px 16px;border-bottom:1px solid rgba(255,179,0,.07);
+  display:flex;align-items:center;gap:10px;
+}
+.chat-signal{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:logoPulse 1.5s infinite}
+.chat-title{font-family:var(--mono);font-size:10px;color:var(--white);letter-spacing:2px;flex:1}
+.chat-status{font-family:var(--mono);font-size:8px;color:var(--teal);letter-spacing:2px;animation:logoPulse 2s infinite}
+.chat-msgs{height:220px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.chat-msgs::-webkit-scrollbar{width:2px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--dim2)}
+.msg{max-width:75%;animation:msgPop .3s ease}
+@keyframes msgPop{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+.msg-victim{align-self:flex-start}
+.msg-duck{align-self:flex-end}
+.msg-label{font-family:var(--mono);font-size:8px;letter-spacing:2px;margin-bottom:4px}
+.msg-victim .msg-label{color:var(--blue)}
+.msg-duck .msg-label{color:var(--amber);text-align:right}
+.msg-bubble{padding:10px 14px;font-family:var(--body);font-size:13px;line-height:1.6}
+.msg-victim .msg-bubble{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);color:var(--white)}
+.msg-duck .msg-bubble{background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);color:var(--white)}
+.msg-system{
+  align-self:center;font-family:var(--mono);font-size:9px;
+  color:var(--red);letter-spacing:2px;
+  padding:5px 14px;border:1px solid rgba(255,45,85,.2);
+  background:rgba(255,45,85,.05);animation:msgPop .3s ease;
+}
+.chat-typing{align-self:flex-start;display:none}
+.chat-typing .msg-bubble{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.08)}
+.typing-dots{display:flex;gap:4px;align-items:center;height:16px}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:dotBounce .6s ease-in-out infinite}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes dotBounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
+
+.chat-input-row{
+  display:flex;gap:0;border-top:1px solid rgba(255,179,0,.07);
+}
+.chat-inp{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--white);font-family:var(--body);font-size:14px;
+  padding:12px 16px;caret-color:var(--amber);
+}
+.chat-inp::placeholder{color:var(--dim)}
+.chat-send{
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;
+  padding:12px 20px;background:rgba(255,179,0,.08);
+  border:none;border-left:1px solid rgba(255,179,0,.1);
+  color:var(--amber);cursor:pointer;transition:all .2s;
+}
+.chat-send:hover{background:rgba(255,179,0,.15)}
+
+/* DEMO CONTROLS */
+.demo-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.demo-btn{
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;
+  padding:8px 16px;cursor:pointer;border:1px solid;transition:all .2s;
+  clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);
+}
+.dbtn-run{border-color:rgba(255,179,0,.3);color:var(--amber);background:rgba(255,179,0,.05)}
+.dbtn-run:hover{background:rgba(255,179,0,.12);box-shadow:0 0 16px rgba(255,179,0,.2)}
+.dbtn-reset{border-color:rgba(255,45,85,.3);color:var(--red);background:transparent}
+.dbtn-reset:hover{background:rgba(255,45,85,.08)}
+.dbtn-next{border-color:rgba(0,212,255,.3);color:var(--blue);background:rgba(0,212,255,.04)}
+.dbtn-next:hover{background:rgba(0,212,255,.1)}
+
+/* ══════════════════════════════════
+   CTF PAGE
+══════════════════════════════════ */
+#PC{background:var(--abyss)}
+.ctf-hero{position:relative;padding:48px;margin-bottom:24px;background:var(--deep);border:1px solid rgba(255,179,0,.08);overflow:hidden}
+.ctf-hero::before{content:'HUNT';position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-family:var(--bebas);font-size:220px;color:transparent;-webkit-text-stroke:1px rgba(255,179,0,.03);pointer-events:none;line-height:1}
+.ctf-hero::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber),var(--blue),transparent)}
+.ctf-t{font-family:var(--bebas);font-size:clamp(36px,7vw,92px);letter-spacing:2px;color:var(--white);margin-bottom:10px;line-height:1}
+.ctf-t span{color:var(--amber);text-shadow:0 0 30px var(--amber)}
+.ctf-d{font-size:14px;color:var(--dim);max-width:500px;line-height:1.8;font-family:var(--mono)}
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,179,0,.07);border:1px solid rgba(255,179,0,.07);margin-bottom:24px}
+.hcell{background:var(--deep);padding:22px;text-align:center}
+.hval{font-family:var(--bebas);font-size:48px;letter-spacing:2px;color:var(--amber);line-height:1;text-shadow:0 0 20px rgba(255,179,0,.4)}
+.hlbl{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:3px;margin-top:5px}
+.hrnk{font-family:var(--mono);font-size:13px;color:var(--blue)}
+
+.ch{border:1px solid var(--dim2);margin-bottom:4px;background:var(--deep);overflow:hidden;transition:background .2s}
+.ch:hover,.ch.solved{background:var(--panel)}
+.ch.solved{border-color:rgba(255,179,0,.2)}
+.ch-row{display:flex;align-items:center;gap:16px;padding:16px 22px;cursor:pointer;min-height:58px}
+.ch-n{font-family:var(--display);font-size:22px;font-weight:900;color:var(--dim2);width:40px;flex-shrink:0;transition:color .3s}
+.ch:hover .ch-n,.ch.solved .ch-n{color:var(--amber)}
+.ch-title{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:2px;flex:1;transition:color .2s}
+.ch:hover .ch-title,.ch.solved .ch-title{color:var(--white)}
+.ch-pts{font-family:var(--mono);font-size:9px;padding:4px 11px;border:1px solid var(--dim2);color:var(--dim);white-space:nowrap;transition:all .2s}
+.ch.solved .ch-pts{border-color:var(--amber);color:var(--amber)}
+.ch-st{font-family:var(--mono);font-size:9px;color:var(--dim);width:70px;text-align:right;flex-shrink:0}
+.ch.solved .ch-st{color:var(--amber)}
+.ch-arr{color:var(--dim);font-size:11px;transition:transform .3s;flex-shrink:0}
+.ch-arr.op{transform:rotate(180deg)}
+.ch-body{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.4,0,.2,1)}
+.ch-body.op{max-height:700px}
+.ch-inner{padding:0 22px 24px;border-top:1px solid var(--dim2)}
+.ch-desc{font-size:14px;color:rgba(232,244,255,.5);line-height:1.9;margin:16px 0;font-family:var(--body)}
+.dblk{background:var(--void);border:1px solid var(--dim2);padding:14px 16px;margin-bottom:14px;font-family:var(--mono);font-size:11px;position:relative}
+.dblk::before{content:attr(data-l);position:absolute;top:-9px;left:10px;background:var(--void);padding:0 8px;font-size:8px;color:var(--blue);letter-spacing:2px}
+.dbl{line-height:2.2;word-break:break-all}
+.dk{color:var(--dim)}.dv{color:var(--amber)}.dw{color:var(--blue)}.dr{color:var(--red)}
+.hbtn{font-family:var(--mono);font-size:9px;color:var(--teal);border:1px solid rgba(0,255,212,.2);background:transparent;padding:7px 13px;cursor:pointer;letter-spacing:1.5px;transition:all .2s}
+.hbtn:hover{background:rgba(0,255,212,.06);border-color:var(--teal)}
+.htxt{margin-top:8px;padding:11px 14px;background:rgba(0,255,212,.03);border-left:2px solid var(--teal);font-family:var(--mono);font-size:11px;color:var(--teal);line-height:1.8;display:none}
+.flag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.fi{flex:1;min-width:180px;background:var(--void);border:1px solid var(--dim2);color:var(--amber);font-family:var(--mono);font-size:12px;padding:10px 13px;outline:none;transition:all .2s;letter-spacing:1px}
+.fi:focus{border-color:rgba(255,179,0,.4);box-shadow:0 0 0 2px rgba(255,179,0,.06)}
+.fi.ok{border-color:var(--amber);background:rgba(255,179,0,.04)}
+.fi.ng{border-color:var(--red);animation:shk .3s}
+@keyframes shk{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fsub{background:transparent;border:1px solid var(--dim2);color:var(--dim);font-family:var(--mono);font-size:9px;padding:10px 16px;cursor:pointer;letter-spacing:1.5px;transition:all .2s}
+.fsub:hover{border-color:var(--amber);color:var(--amber);background:rgba(255,179,0,.04)}
+.ffb{font-family:var(--mono);font-size:10px;margin-top:8px;letter-spacing:1px;display:none}
+.fb-ok{color:var(--amber)}.fb-ng{color:var(--red)}
+
+.ct-term{border:1px solid rgba(255,179,0,.08);background:var(--void);overflow:hidden;margin-top:28px}
+.ct-bar{background:var(--deep);border-bottom:1px solid var(--dim2);padding:10px 15px;display:flex;align-items:center;gap:6px}
+.ct-out{height:200px;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:1px;font-family:var(--mono);font-size:11px}
+.ct-out::-webkit-scrollbar{width:2px}
+.ct-out::-webkit-scrollbar-thumb{background:var(--dim2)}
+.tline{line-height:1.8;word-break:break-all}
+.t-a{color:var(--amber)}.t-b{color:var(--blue)}.t-y{color:var(--teal)}.t-r{color:var(--red)}.t-m{color:var(--dim)}.t-w{color:var(--white)}
+.ct-irow{display:flex;align-items:center;gap:9px;padding:10px 18px;border-top:1px solid var(--dim2);background:var(--deep)}
+.ct-pr{color:var(--amber);font-family:var(--mono);font-size:10px;white-space:nowrap}
+.ct-inp{flex:1;background:transparent;border:none;outline:none;color:var(--amber);font-family:var(--mono);font-size:11px;caret-color:var(--amber)}
+.ct-inp::placeholder{color:var(--dim)}
+
+/* ══════════════════════════════════
+   CONTACT PAGE
+══════════════════════════════════ */
+#PCO{background:linear-gradient(180deg,var(--abyss),var(--void))}
+.conn-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+@media(max-width:860px){.conn-grid{grid-template-columns:1fr;gap:40px}}
+.conn-big{font-family:var(--bebas);font-size:clamp(48px,9vw,110px);letter-spacing:2px;color:var(--white);line-height:.88;margin-bottom:24px}
+.conn-big span{color:var(--amber);display:block;text-shadow:0 0 40px rgba(255,179,0,.3)}
+.conn-p{font-size:15px;color:rgba(232,244,255,.5);line-height:1.9;font-family:var(--body);max-width:380px}
+.conn-p strong{color:var(--white)}
+.clist{display:flex;flex-direction:column;gap:1px;background:rgba(255,179,0,.06)}
+.cc{background:var(--deep);padding:20px 24px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:background .2s;text-decoration:none;border:none;text-align:left;width:100%}
+.cc:hover{background:var(--panel)}
+.cc-ico{width:42px;height:42px;border:1px solid var(--dim2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:border-color .2s}
+.cc:hover .cc-ico{border-color:var(--amber)}
+.cc-info{flex:1}
+.cc-type{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:3px;margin-bottom:3px}
+.cc-val{font-size:13px;color:var(--white);font-family:var(--mono);word-break:break-all}
+.cc-arr{color:var(--dim);font-size:14px;transition:all .2s;flex-shrink:0}
+.cc:hover .cc-arr{color:var(--amber);transform:translateX(4px)}
+.closing{margin-top:32px;padding:32px;border:1px solid rgba(255,179,0,.08);background:var(--deep);position:relative;overflow:hidden}
+.closing::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--amber),var(--blue),var(--violet))}
+.cl-q{font-family:var(--display);font-size:clamp(14px,2vw,20px);font-weight:700;color:var(--white);line-height:1.4;margin-bottom:16px}
+.cl-q span{color:var(--amber)}
+.cl-sig{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:3px}
+
+/* FOCUS */
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+@media(max-width:700px){.proj-grid-2,.proj-grid-3{grid-template-columns:1fr}.rd-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="CUR" aria-hidden="true"><div id="c1"></div><div id="c2"></div></div>
+
+<!-- AMBIENT -->
+<canvas id="canvas-bg"></canvas>
+<canvas id="canvas-particles"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="chroma"></div>
+
+<!-- PAGE WIPE -->
+<div id="WIPE"><div class="wstripe"></div><div class="wstripe"></div><div class="wstripe"></div><div class="wstripe"></div><div class="wstripe"></div><div class="wstripe"></div><div class="wstripe"></div><div class="wstripe"></div></div>
+
+<!-- ═══════════ INTRO ═══════════ -->
+<div id="INTRO">
+  <canvas id="intro-canvas"></canvas>
+  <div class="static-overlay"></div>
+  <div id="alert-ring"></div>
+  <div id="scan"></div>
+  <div class="ic ic-tl"></div>
+  <div class="ic ic-tr"></div>
+  <div class="ic ic-bl"></div>
+  <div class="ic ic-br"></div>
+  <div id="hack-center">
+    <div id="h-title">YOU HAVE BEEN HACKED</div>
+    <div id="h-sub">INTRUSION DETECTED — SYSTEM COMPROMISED</div>
+    <div id="h-sub2">ORIGIN: UNKNOWN &nbsp;// &nbsp;SIGNATURE: ctrl-Nix</div>
+    <div id="h-line"></div>
+    <div id="h-cta">
+      <button id="h-btn" onclick="enterSite()">
+        <div class="btn-corner bc-tl"></div>
+        <div class="btn-corner bc-tr"></div>
+        <div class="btn-corner bc-bl"></div>
+        <div class="btn-corner bc-br"></div>
+        WANT TO KNOW THE HACKER?
+      </button>
+    </div>
+  </div>
+  <div id="iprog"><div id="ibar"></div></div>
+</div>
+
+<!-- ═══════════ SITE ═══════════ -->
+<div id="SITE" style="display:none">
+
+<nav id="NAV">
+  <div class="nlogo"><div class="logo-dot"></div>ctrl-Nix</div>
+  <div class="nlinks">
+    <button class="nl on" data-p="PH" onclick="go('PH')">MISSION</button>
+    <button class="nl" data-p="PA" onclick="go('PA')">DOSSIER</button>
+    <button class="nl" data-p="PP" onclick="go('PP')">OPERATIONS</button>
+    <button class="nl" data-p="PRD" onclick="go('PRD')">RUBBER DUCKY</button>
+    <button class="nl" data-p="PC" onclick="go('PC')">CTF</button>
+    <button class="nl" data-p="PCO" onclick="go('PCO')">CONTACT</button>
+  </div>
+  <div class="nright"><div class="ntime" id="ntime">--:--:--</div></div>
+</nav>
+
+<button id="BACK" onclick="goBack()"><span class="back-ico">◄</span><span>BACK</span></button>
+
+<!-- ═══════════ HOME ═══════════ -->
+<!-- FLAG{you_found_the_source_ctrl_nix_nods} -->
+<div id="PH" class="page on" style="display:none">
+  <div class="hero-parallax">
+    <div class="circuit-bg"></div>
+    <div class="hero-num" aria-hidden="true">01</div>
+    <div class="hero-inner">
+      <div class="rpg-header">
+        <div class="rpg-tag">CLASSIFIED</div>
+        <div class="rpg-tag-line"></div>
+        <div class="rpg-sys">MISSION BRIEFING // 2025 // ACTIVE</div>
+      </div>
+      <h1 class="hero-name">
+        SHREYANS<span class="hn-accent">H</span>I<br/>
+        <span class="hn-g">SINGH</span>
+      </h1>
+      <div class="hero-handle">// ctrl-Nix</div>
+      <p class="hero-bio">
+        Cybersecurity × ML student at <span class="bio-c">KIIT</span>.<br/>
+        Building <span class="bio-hl">intelligent security systems</span> that don't exist yet.<br/>
+        Threat detection · AI forensics · <span class="bio-a">Cryptography</span>.<br/>
+        <span class="bio-v">Also writes poetry.</span>
+      </p>
+      <div class="stat-bar">
+        <div class="stat-item"><div class="sdot s-a"></div>ONLINE</div>
+        <div class="stat-item"><div class="sdot s-b"></div>BHUBANESHWAR, IN</div>
+        <div class="stat-item"><div class="sdot s-a"></div>6 CTF FLAGS ACTIVE</div>
+        <div class="stat-item"><div class="sdot s-v"></div>OPEN TO WORK</div>
+        <div class="stat-item"><div class="sdot s-t"></div>1ST YEAR · KIIT CSE</div>
+      </div>
+      <div class="mission-grid">
+        <button class="mcard" onclick="go('PA')"><div class="mc-id">01</div><div class="mc-cat">ACCESS FILE</div><div class="mc-title">DOSSIER</div><div class="mc-sub">Target profile + intel</div></button>
+        <button class="mcard" onclick="go('PP')"><div class="mc-id">02</div><div class="mc-cat">DEPLOYED SYSTEMS</div><div class="mc-title">OPERATIONS</div><div class="mc-sub">Active projects</div></button>
+        <button class="mcard" onclick="go('PRD')"><div class="mc-id">03</div><div class="mc-cat">LIVE DEMO</div><div class="mc-title">RUBBER DUCKY</div><div class="mc-sub">Interactive attack demo</div></button>
+        <button class="mcard" onclick="go('PC')"><div class="mc-id">04</div><div class="mc-cat">CHALLENGE</div><div class="mc-title">CTF HUNT</div><div class="mc-sub">6 flags to find</div></button>
+        <button class="mcard" onclick="go('PCO')"><div class="mc-id">05</div><div class="mc-cat">ESTABLISH</div><div class="mc-title">CONTACT</div><div class="mc-sub">Reach out</div></button>
+      </div>
+    </div>
+    <div class="scroll-h"><span class="sh-t">SCROLL</span><div class="sh-l"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════ DOSSIER ═══════════ -->
+<div id="PA" class="page">
+  <div class="sec">
+    <div class="eyebrow">MODULE 01</div>
+    <h2 class="sec-h">DOS<span class="a">SIER</span></h2>
+    <p class="sec-sub">Full intel on ctrl-Nix — who she is, what she builds, how she thinks.</p>
+    <div class="rule"></div>
+    <div class="about-grid">
+      <div>
+        <p class="ab-p">Real name: <strong>Shreyanshi Singh</strong>. Handle: <strong class="a">ctrl-Nix</strong>. First-year B.Tech at <strong>KIIT, Bhubaneshwar</strong> — already building AI-powered security tools most seniors haven't attempted.</p>
+        <p class="ab-p">Operating at the intersection of <strong>cybersecurity and machine learning</strong> — the exact edge where intelligent defense systems need to be built today. Threat detection, AI forensics, applied <span class="b">cryptography</span>.</p>
+        <p class="ab-p">Built a <strong>financial forensics AI</strong> on a <span class="b">PDF → OCR → Gemini 2.5 Pro → anomaly report</span> pipeline. Cloned production streaming and e-commerce platforms. All in the <span class="a">first year</span>.</p>
+        <p class="ab-p">Also: she writes <span class="v">poetry</span> and sketches. Because creativity and analytical thinking are <strong>the same muscle</strong>.</p>
+        <div class="sk-h">// SKILL_MATRIX</div>
+        <div id="skills-wrap">
+          <div class="skill"><div class="sk-top"><span class="sk-n">PYTHON</span><span class="sk-p">92</span></div><div class="sk-track"><div class="sk-fill" style="--w:92%"></div></div></div>
+          <div class="skill"><div class="sk-top"><span class="sk-n">MACHINE LEARNING</span><span class="sk-p">78</span></div><div class="sk-track"><div class="sk-fill" style="--w:78%"></div></div></div>
+          <div class="skill"><div class="sk-top"><span class="sk-n">CRYPTOGRAPHY</span><span class="sk-p">75</span></div><div class="sk-track"><div class="sk-fill" style="--w:75%"></div></div></div>
+          <div class="skill"><div class="sk-top"><span class="sk-n">C / C++</span><span class="sk-p">70</span></div><div class="sk-track"><div class="sk-fill" style="--w:70%"></div></div></div>
+          <div class="skill"><div class="sk-top"><span class="sk-n">JAVASCRIPT / WEB</span><span class="sk-p">68</span></div><div class="sk-track"><div class="sk-fill" style="--w:68%"></div></div></div>
+          <div class="skill"><div class="sk-top"><span class="sk-n">OSINT</span><span class="sk-p">65</span></div><div class="sk-track"><div class="sk-fill" style="--w:65%"></div></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="tcard">
+          <div class="thead"><div class="tdot dr"></div><div class="tdot dy"></div><div class="tdot dg"></div><div class="ttitle">target_intel.sh</div></div>
+          <div class="tbody">
+            <div class="tl dim cmd">cat /etc/target.conf</div>
+            <div class="tl ta">NAME="Shreyanshi Singh"</div>
+            <div class="tl">HANDLE="ctrl-Nix"</div>
+            <div class="tl">LOC="Bhubaneshwar, Odisha"</div>
+            <div class="tl tb">UNI="KIIT B.Tech CSE"</div>
+            <div class="tl">YEAR="First Year"</div>
+            <div class="tl ta">STATUS="OPEN_TO_WORK"</div>
+            <div class="tl">GITHUB="ctrl-Nix"</div>
+            <div class="tl">PROJECTS=4 · CTF_FLAGS=6</div>
+            <div class="tl dim">---</div>
+            <div class="tl dim cmd">./secrets.sh</div>
+            <div class="tl ta">also_writes="poetry ✍"</div>
+            <div class="tl ty">sketches=true · caffeine=high</div>
+            <div class="tl dim">$ <span class="tcaret"></span></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:20px;border:1px solid rgba(255,179,0,.07);background:var(--deep)">
+          <div class="sk-h" style="margin:0 0 12px">// INTERESTS</div>
+          <div class="tags">
+            <span class="tag t-a">THREAT DETECTION</span><span class="tag t-b">AI SECURITY</span><span class="tag t-a">OSINT</span><span class="tag t-v">CRYPTOGRAPHY</span><span class="tag t-a">FORENSICS</span><span class="tag t-t">POETRY ✍</span><span class="tag t-t">ART 🎨</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ OPERATIONS ═══════════ -->
+<div id="PP" class="page">
+  <div class="sec"><div class="eyebrow">MODULE 02</div><h2 class="sec-h">OPE<span class="b">RATIONS</span></h2><p class="sec-sub">Deployed systems — all active, all real.</p><div class="rule"></div></div>
+  <div style="max-width:1200px;margin:0 auto;padding:0 64px 80px">
+    <div class="proj-grid-2">
+      <div class="pcard" tabindex="0"><div class="p-link">github.com/ctrl-Nix ↗</div><div class="p-num">01</div><div class="p-cat">AI × FINTECH × FORENSICS</div><div class="p-title">FinGuard AI Auditor</div><div class="p-desc">Intelligent financial forensics — processes invoices, receipts, and balance sheets to detect anomalies and fraud patterns before humans do. Full pipeline from raw docs to structured reports.</div><div class="p-tech"><span class="tech">PDF/IMG INPUT</span><span class="tech b">OCR EXTRACTION</span><span class="tech v">GEMINI 2.5 PRO</span><span class="tech">ANOMALY REPORT</span></div><div class="p-chips"><span class="chip">GEMINI 2.5 PRO</span><span class="chip">PYTHON</span><span class="chip">MULTIMODAL AI</span><span class="chip">OCR</span><span class="chip">FRAUD DETECTION</span></div></div>
+      <div class="pcard pb" tabindex="0"><div class="p-link">explore ↗</div><div class="p-num">02</div><div class="p-cat">SECURITY × EDUCATION</div><div class="p-title">Hash & Encrypt Playground</div><div class="p-desc">Type anything. Watch it transform in real time. MD5, SHA-256, AES — all visualized live. A living cryptography textbook where understanding comes from seeing entropy unfold.</div><div class="p-chips"><span class="chip">JAVASCRIPT</span><span class="chip">SHA-256</span><span class="chip">AES</span><span class="chip">MD5</span><span class="chip">REAL-TIME</span></div></div>
+    </div>
+    <div class="proj-grid-3" style="margin-top:1px">
+      <div class="pcard" tabindex="0"><div class="p-link">github ↗</div><div class="p-num">03</div><div class="p-cat">FULL-STACK × UI</div><div class="p-title">Netflix Clone</div><div class="p-desc">A working streaming platform — TMDB API, auth, dynamic browsing. Built to understand how real platforms are architected before studying how they're attacked.</div><div class="p-chips"><span class="chip">TMDB API</span><span class="chip">HTML/CSS/JS</span><span class="chip">AUTH</span></div></div>
+      <div class="pcard" tabindex="0"><div class="p-link">github ↗</div><div class="p-num">04</div><div class="p-cat">E-COMMERCE × SECURITY</div><div class="p-title">Amazon Clone</div><div class="p-desc">Pixel-accurate e-commerce with dynamic listings, functional cart, and payment integration. Understanding e-commerce security means building it first.</div><div class="p-chips"><span class="chip">HTML/CSS/JS</span><span class="chip">CART LOGIC</span><span class="chip">PAYMENTS</span></div></div>
+      <div class="pcard pv" tabindex="0" onclick="go('PRD')" style="cursor:pointer"><div class="p-link">open →</div><div class="p-num" style="color:rgba(139,92,246,.1)">05</div><div class="p-cat" style="color:var(--violet)">LIVE DEMO</div><div class="p-title" style="color:var(--violet)">Rubber Ducky Demo</div><div class="p-desc">Interactive USB attack simulation — learn how a Rubber Ducky works with a step-by-step live chat demo. Built for beginners.</div><div class="p-chips"><span class="chip" style="border-color:rgba(139,92,246,.2);color:rgba(139,92,246,.5)">INTERACTIVE</span><span class="chip" style="border-color:rgba(139,92,246,.2);color:rgba(139,92,246,.5)">EDUCATIONAL</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RUBBER DUCKY ═══════════ -->
+<div id="PRD" class="page">
+  <div class="sec">
+    <div class="eyebrow">MODULE 03</div>
+    <h2 class="sec-h">RUBBER <span class="a">DUCKY</span></h2>
+    <p class="sec-sub">A USB device that looks innocent but secretly types commands faster than any human. Learn how it works — step by step, beginner-friendly.</p>
+    <div class="rule"></div>
+    <div class="rd-layout">
+
+      <!-- DUCKY PANEL -->
+      <div class="ducky-panel">
+        <pre class="ducky-ascii">   _____
+  /  o  \
+ | ~~~~~ |
+  \_____/
+  |  |  |
+  |USB|  |
+  |___|  |
+[=======]</pre>
+        <div class="ducky-name">USB RUBBER DUCKY</div>
+        <div class="ducky-tagline">// THE WORLD'S MOST DANGEROUS USB</div>
+        <div class="d-stat-row">
+          <div class="d-stat"><div class="d-stat-label">FORM FACTOR</div><div class="d-stat-val" style="font-size:16px;font-family:var(--mono)">USB Drive</div></div>
+          <div class="d-stat"><div class="d-stat-label">APPEARS AS</div><div class="d-stat-val" style="font-size:16px;font-family:var(--mono)">HID Keyboard</div></div>
+          <div class="d-stat"><div class="d-stat-label">SPEED</div><div class="d-stat-val">1000<span style="font-size:14px">wpm</span></div></div>
+          <div class="d-stat"><div class="d-stat-label">DETECTION</div><div class="d-stat-val" style="color:var(--red)">NONE</div></div>
+        </div>
+        <div class="threat-bar">
+          <div class="tb-row"><span class="tb-label">STEALTH</span><span class="tb-val">95%</span></div>
+          <div class="tb-track"><div class="tb-fill fill-a" id="tf1"></div></div>
+        </div>
+        <div class="threat-bar">
+          <div class="tb-row"><span class="tb-label">DANGER LEVEL</span><span class="tb-val">88%</span></div>
+          <div class="tb-track"><div class="tb-fill fill-b" id="tf2"></div></div>
+        </div>
+        <div class="threat-bar">
+          <div class="tb-row"><span class="tb-label">EASE OF USE</span><span class="tb-val">82%</span></div>
+          <div class="tb-track"><div class="tb-fill fill-c" id="tf3"></div></div>
+        </div>
+        <div style="margin-top:20px;padding:14px;background:rgba(255,45,85,.05);border:1px solid rgba(255,45,85,.15)">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--red);letter-spacing:2px;margin-bottom:6px">⚠ EDUCATIONAL USE ONLY</div>
+          <div style="font-size:11px;color:rgba(232,244,255,.4);font-family:var(--mono);line-height:1.6">This demo shows how Rubber Ducky attacks work so you can defend against them — not attack others. Understanding attacks = better defense.</div>
+        </div>
+      </div>
+
+      <!-- DEMO STEPS -->
+      <div class="demo-area" id="demo-area">
+
+        <!-- STEP 1 -->
+        <div class="step-card active-step" id="step1">
+          <div class="step-header" onclick="toggleStep(1)">
+            <div class="step-num">01</div>
+            <div class="step-info">
+              <div class="step-title">WHAT IS A RUBBER DUCKY?</div>
+              <div class="step-sub">THE BASICS // BEGINNER</div>
+            </div>
+            <div class="step-badge badge-t">INTRO</div>
+          </div>
+          <div class="step-body">
+            <div class="step-explain">
+              Imagine you find a USB drive on the ground. You plug it in. But instead of files, it's actually a <span class="hl">tiny computer pretending to be a keyboard</span>. Within seconds, it types commands into your computer — faster than any human — and installs software, steals files, or creates backdoors.<br/><br/>
+              <strong>The victim sees nothing. The OS trusts it completely.</strong> Because keyboards are trusted devices.
+            </div>
+            <div class="payload-box" data-l="// WHAT YOUR COMPUTER THINKS">
+              <div class="pl-line"><span class="pl-k">device_type:</span> <span class="pl-s">USB Keyboard (trusted)</span></div>
+              <div class="pl-line"><span class="pl-k">threat_scan:</span> <span class="pl-s">CLEAN — no malware detected</span></div>
+              <div class="pl-line"><span class="pl-k">reality:</span> <span class="pl-r">IT'S A RUBBER DUCKY. YOU'VE BEEN HAD.</span></div>
+            </div>
+            <div class="demo-controls">
+              <button class="demo-btn dbtn-next" onclick="activateStep(2)">NEXT: SEE THE PAYLOAD →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-card" id="step2">
+          <div class="step-header" onclick="toggleStep(2)">
+            <div class="step-num">02</div>
+            <div class="step-info">
+              <div class="step-title">THE PAYLOAD SCRIPT</div>
+              <div class="step-sub">DUCKY SCRIPT LANGUAGE // HOW IT TALKS</div>
+            </div>
+            <div class="step-badge badge-a">CODE</div>
+          </div>
+          <div class="step-body">
+            <div class="step-explain">
+              Rubber Ducky runs a simple script language called <span class="hl">DuckyScript</span>. Each line is an instruction — like <span class="hlb">DELAY</span> (wait), <span class="hlb">STRING</span> (type text), <span class="hlb">ENTER</span> (press enter). The device executes this script the moment it's plugged in.
+            </div>
+            <div class="payload-box" data-l="// SAMPLE DUCKYSCRIPT PAYLOAD">
+              <div class="pl-line"><span class="pl-k">DELAY</span> <span class="pl-c">500</span>  <span style="color:rgba(232,244,255,.2)">// wait 500ms for OS to recognize device</span></div>
+              <div class="pl-line"><span class="pl-k">GUI</span> <span class="pl-v">r</span>  <span style="color:rgba(232,244,255,.2)">// press Windows + R (Run dialog)</span></div>
+              <div class="pl-line"><span class="pl-k">DELAY</span> <span class="pl-c">300</span></div>
+              <div class="pl-line"><span class="pl-k">STRING</span> <span class="pl-v">cmd.exe</span>  <span style="color:rgba(232,244,255,.2)">// type "cmd.exe"</span></div>
+              <div class="pl-line"><span class="pl-k">ENTER</span></div>
+              <div class="pl-line"><span class="pl-k">DELAY</span> <span class="pl-c">400</span></div>
+              <div class="pl-line"><span class="pl-k">STRING</span> <span class="pl-r">whoami && ipconfig /all</span>  <span style="color:rgba(232,244,255,.2)">// get identity + network info</span></div>
+              <div class="pl-line"><span class="pl-k">ENTER</span></div>
+            </div>
+            <div class="demo-controls">
+              <button class="demo-btn dbtn-next" onclick="activateStep(3)">NEXT: SEE IT LIVE →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: LIVE CHAT DEMO -->
+        <div class="step-card" id="step3">
+          <div class="step-header" onclick="toggleStep(3)">
+            <div class="step-num">03</div>
+            <div class="step-info">
+              <div class="step-title">LIVE ATTACK SIMULATION</div>
+              <div class="step-sub">INTERACTIVE DEMO // PLAY BOTH SIDES</div>
+            </div>
+            <div class="step-badge badge-b">LIVE</div>
+          </div>
+          <div class="step-body">
+            <div class="step-explain">
+              Watch a <span class="hl">simulated attack</span> unfold in real time. The Ducky is already plugged in. Every message below shows what's happening on the victim's computer — and what the ducky is doing behind the scenes. <strong>You can also type and respond.</strong>
+            </div>
+
+            <div class="chat-demo">
+              <div class="chat-bar">
+                <div class="chat-signal"></div>
+                <div class="chat-title">DUCKY_ATTACK_SIMULATION.exe</div>
+                <div class="chat-status" id="chat-status">● CONNECTED</div>
+              </div>
+              <div class="chat-msgs" id="chat-msgs">
+                <div class="msg msg-system">[ SIMULATION STARTED — DUCKY PLUGGED IN ]</div>
+              </div>
+              <div class="chat-input-row">
+                <input type="text" class="chat-inp" id="chat-inp" placeholder="Type as the victim... press Enter to respond" />
+                <button class="chat-send" onclick="sendMsg()">SEND ▶</button>
+              </div>
+            </div>
+
+            <div class="demo-controls">
+              <button class="demo-btn dbtn-run" onclick="runAttackDemo()" id="demo-run-btn">▶ RUN ATTACK DEMO</button>
+              <button class="demo-btn dbtn-reset" onclick="resetDemo()">↺ RESET</button>
+              <button class="demo-btn dbtn-next" onclick="activateStep(4)">NEXT: HOW TO DEFEND →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step-card" id="step4">
+          <div class="step-header" onclick="toggleStep(4)">
+            <div class="step-num">04</div>
+            <div class="step-info">
+              <div class="step-title">HOW TO DEFEND YOURSELF</div>
+              <div class="step-sub">PROTECTION STRATEGIES // CRITICAL</div>
+            </div>
+            <div class="step-badge badge-b">DEFENSE</div>
+          </div>
+          <div class="step-body">
+            <div class="step-explain">
+              Now that you know the attack — here's how <span class="hl">ctrl-Nix would defend against it</span>. Good security isn't about paranoia. It's about knowing your threat model and taking specific, targeted steps.
+            </div>
+            <div class="payload-box" data-l="// DEFENSE PLAYBOOK">
+              <div class="pl-line"><span class="pl-s">✓</span> <span class="pl-w">NEVER plug in unknown USB devices</span> <span style="color:rgba(232,244,255,.2)">// #1 rule</span></div>
+              <div class="pl-line"><span class="pl-s">✓</span> <span class="pl-w">Enable USB device whitelisting</span> <span style="color:rgba(232,244,255,.2)">// only known devices allowed</span></div>
+              <div class="pl-line"><span class="pl-s">✓</span> <span class="pl-w">Use endpoint protection that blocks HID attacks</span></div>
+              <div class="pl-line"><span class="pl-s">✓</span> <span class="pl-w">Disable USB ports in BIOS for sensitive machines</span></div>
+              <div class="pl-line"><span class="pl-r">✗</span> <span class="pl-w">"It looks like a real USB so it's fine"</span> <span style="color:var(--red)">← that's how people get hacked</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+              <div style="padding:16px;background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.1)">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:2px;margin-bottom:8px">ATTACKER'S VIEW</div>
+                <div style="font-size:12px;color:rgba(232,244,255,.5);font-family:var(--mono);line-height:1.7">Plugged in, done in 3 seconds. Victim has no idea. Complete access.</div>
+              </div>
+              <div style="padding:16px;background:rgba(0,212,255,.03);border:1px solid rgba(0,212,255,.1)">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:2px;margin-bottom:8px">DEFENDER'S VIEW</div>
+                <div style="font-size:12px;color:rgba(232,244,255,.5);font-family:var(--mono);line-height:1.7">USB blocked at hardware level. Zero execution. Game over for attacker.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /demo-area -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CTF ═══════════ -->
+<div id="PC" class="page">
+  <div class="sec">
+    <div class="eyebrow">MODULE 04</div>
+    <div class="ctf-hero">
+      <h2 class="ctf-t">FIND <span>ctrl-Nix.</span></h2>
+      <p class="ctf-d">6 breadcrumbs across source code, ciphers, binary, and acrostics. Her real LinkedIn is the final flag. Use the terminal to decode.</p>
+    </div>
+    <div class="hud">
+      <div class="hcell"><div class="hval" id="cp">0</div><div class="hlbl">POINTS</div></div>
+      <div class="hcell"><div class="hval" id="csolv" style="font-size:32px">0/6</div><div class="hlbl">SOLVED</div></div>
+      <div class="hcell"><div class="hrnk" id="crnk">—</div><div class="hlbl">RANK</div></div>
+    </div>
+    <div class="ch" id="c1"><div class="ch-row" onclick="tog(1)" tabindex="0"><div class="ch-n">I</div><div class="ch-title">VIEW SOURCE</div><span class="ch-pts">50 PTS</span><span class="ch-st" id="cs1">OPEN</span><span class="ch-arr" id="ca1">▾</span></div><div class="ch-body" id="cb1"><div class="ch-inner"><p class="ch-desc">Old hacker tradition — leave a flag in the HTML comments. Open DevTools or View Source. Search for "FLAG".</p><div class="dblk" data-l="// METHOD"><div class="dbl"><span class="dk">keyboard:</span> <span class="dv">Ctrl+U → Ctrl+F → "FLAG"</span></div><div class="dbl"><span class="dk">devtools:</span> <span class="dv">F12 → Elements → search</span></div></div><div class="flag-row"><input type="text" class="fi" id="fi1" placeholder="FLAG{...}"/><button class="fsub" onclick="sub(1,50)">SUBMIT</button></div><div class="ffb" id="ff1"></div></div></div></div>
+    <div class="ch" id="c2"><div class="ch-row" onclick="tog(2)" tabindex="0"><div class="ch-n">II</div><div class="ch-title">DECODE THE ALIAS</div><span class="ch-pts">100 PTS</span><span class="ch-st" id="cs2">OPEN</span><span class="ch-arr" id="ca2">▾</span></div><div class="ch-body" id="cb2"><div class="ch-inner"><p class="ch-desc">Her GitHub handle committed as Base64. Decode it.</p><div class="dblk" data-l="// code_comment.py"><div class="dbl"><span class="dk"># handle_encoded:</span> <span class="dv">Y3RybC1OaXg=</span></div></div><div style="margin-bottom:12px"><button class="hbtn" onclick="toggleH('h2')">💡 HINT [−20 PTS]</button><div class="htxt" id="h2">Browser console: atob("Y3RybC1OaXg=")</div></div><div class="flag-row"><input type="text" class="fi" id="fi2" placeholder="GitHub handle"/><button class="fsub" onclick="sub(2,100)">SUBMIT</button></div><div class="ffb" id="ff2"></div></div></div></div>
+    <div class="ch" id="c3"><div class="ch-row" onclick="tog(3)" tabindex="0"><div class="ch-n">III</div><div class="ch-title">CAESAR CIPHER</div><span class="ch-pts">150 PTS</span><span class="ch-st" id="cs3">OPEN</span><span class="ch-arr" id="ca3">▾</span></div><div class="ch-body" id="cb3"><div class="ch-inner"><p class="ch-desc">Email username encrypted with Caesar cipher. Shift = length of her last name. Reverse to decode.</p><div class="dblk" data-l="// README_signed.txt"><div class="dbl"><span class="dk">cipher:</span> <span class="dv">fuveljafuvfbojanf</span></div><div class="dbl"><span class="dk">shift:</span> <span class="dw">len("Singh") = 5 — subtract</span></div></div><div style="margin-bottom:12px"><button class="hbtn" onclick="toggleH('h3')">💡 HINT [−20 PTS]</button><div class="htxt" id="h3">Terminal: caesar 5 fuveljafuvfbojanf</div></div><div class="flag-row"><input type="text" class="fi" id="fi3" placeholder="email username"/><button class="fsub" onclick="sub(3,150)">SUBMIT</button></div><div class="ffb" id="ff3"></div></div></div></div>
+    <div class="ch" id="c4"><div class="ch-row" onclick="tog(4)" tabindex="0"><div class="ch-n">IV</div><div class="ch-title">READ THE BINARY</div><span class="ch-pts">150 PTS</span><span class="ch-st" id="cs4">OPEN</span><span class="ch-arr" id="ca4">▾</span></div><div class="ch-body" id="cb4"><div class="ch-inner"><p class="ch-desc">City encoded in binary. Each 8-bit group = one ASCII character.</p><div class="dblk" data-l="// location.bin"><div class="dbl" style="word-spacing:8px;line-height:2.4"><span class="dv">01000010 01101000 01110101 01100010 01100001 01101110 01100101 01110011 01101000 01110111 01100001 01110010</span></div></div><div style="margin-bottom:12px"><button class="hbtn" onclick="toggleH('h4')">💡 HINT [−20 PTS]</button><div class="htxt" id="h4">01000010 = 66 = 'B'. Terminal: binary [8bit groups]</div></div><div class="flag-row"><input type="text" class="fi" id="fi4" placeholder="City name"/><button class="fsub" onclick="sub(4,150)">SUBMIT</button></div><div class="ffb" id="ff4"></div></div></div></div>
+    <div class="ch" id="c5"><div class="ch-row" onclick="tog(5)" tabindex="0"><div class="ch-n">V</div><div class="ch-title">ACROSTIC — FIRST LETTERS</div><span class="ch-pts">200 PTS</span><span class="ch-st" id="cs5">OPEN</span><span class="ch-arr" id="ca5">▾</span></div><div class="ch-body" id="cb5"><div class="ch-inner"><p class="ch-desc">University name hidden in the first letter of each paragraph.</p><div class="dblk" data-l="// bio_text.txt"><div class="dbl" style="line-height:2.4;color:rgba(232,244,255,.4);font-family:var(--body);font-size:13px"><strong style="color:var(--amber);font-family:var(--mono)">K</strong>nowledge isn't given — it's extracted from hard problems.<br/><strong style="color:var(--amber);font-family:var(--mono)">I</strong>ntelligent systems don't emerge from textbooks alone.<br/><strong style="color:var(--amber);font-family:var(--mono)">I</strong>ntuition in security comes from failure.<br/><strong style="color:var(--amber);font-family:var(--mono)">T</strong>he best code I write is the code I eventually delete.</div></div><div style="margin-bottom:12px"><button class="hbtn" onclick="toggleH('h5')">💡 HINT [−20 PTS]</button><div class="htxt" id="h5">K — I — I — T. First letter of each paragraph.</div></div><div class="flag-row"><input type="text" class="fi" id="fi5" placeholder="University abbreviation"/><button class="fsub" onclick="sub(5,200)">SUBMIT</button></div><div class="ffb" id="ff5"></div></div></div></div>
+    <div class="ch" id="c6"><div class="ch-row" onclick="tog(6)" tabindex="0"><div class="ch-n">VI</div><div class="ch-title">LOCATE THE REAL PROFILE</div><span class="ch-pts">250 PTS</span><span class="ch-st" id="cs6">OPEN</span><span class="ch-arr" id="ca6">▾</span></div><div class="ch-body" id="cb6"><div class="ch-inner"><p class="ch-desc">Decode the LinkedIn slug, visit her profile, find the keyword in her About section.</p><div class="dblk" data-l="// network_scan.log"><div class="dbl"><span class="dk">platform:</span> <span class="dv">LinkedIn</span></div><div class="dbl"><span class="dk">slug_b64:</span> <span class="dv">c2hyZXlhbnNoaS1zaW5naA==</span></div><div class="dbl"><span class="dk">url:</span> <span class="dw">linkedin.com/in/[decode_slug]</span></div><div class="dbl"><span class="dk">look_in:</span> <span class="dr">About section — keyword for investigators</span></div></div><div style="margin-bottom:12px"><button class="hbtn" onclick="toggleH('h6')">💡 HINT [−25 PTS]</button><div class="htxt" id="h6">Terminal: decode c2hyZXlhbnNoaS1zaW5naA== → LinkedIn → About → keyword.</div></div><div class="flag-row"><input type="text" class="fi" id="fi6" placeholder="Keyword from LinkedIn About"/><button class="fsub" onclick="sub(6,250)">SUBMIT</button></div><div class="ffb" id="ff6"></div></div></div></div>
+    <div style="margin-top:4px">
+      <div class="sk-h" style="margin:24px 0 8px">// DECODE TERMINAL</div>
+      <div class="ct-term">
+        <div class="ct-bar"><div class="tdot dr"></div><div class="tdot dy"></div><div class="tdot dg"></div><span style="flex:1;text-align:center;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:2px">ctrl-nix@osint:~$</span></div>
+        <div class="ct-out" id="tout"><div class="tline t-a">OSINT shell ready. Type <span style="color:var(--white)">help</span> for commands.</div><div class="tline t-m">────────────────────────────────────</div></div>
+        <div class="ct-irow"><span class="ct-pr">ctrl-nix@osint:~$</span><input type="text" id="tinp" class="ct-inp" placeholder="type a command..." autocomplete="off" spellcheck="false"/></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CONTACT ═══════════ -->
+<div id="PCO" class="page">
+  <div class="sec">
+    <div class="eyebrow">MODULE 05</div>
+    <h2 class="sec-h">CONTACT</h2>
+    <div class="rule"></div>
+    <div class="conn-grid">
+      <div>
+        <div class="conn-big">LET'S<span>BUILD.</span></div>
+        <p class="conn-p">First-year. Already shipping. <strong>Open to internships, research collabs, and CTF teams.</strong><br/><br/>If you got through the CTF challenges — you're exactly the kind of person I want to work with.</p>
+      </div>
+      <div>
+        <div class="clist">
+          <a class="cc" href="mailto:shreyanshisreeansh@gmail.com"><div class="cc-ico">📧</div><div class="cc-info"><div class="cc-type">EMAIL</div><div class="cc-val">shreyanshisreeansh@gmail.com</div></div><div class="cc-arr">→</div></a>
+          <a class="cc" href="https://github.com/ctrl-Nix" target="_blank" rel="noopener"><div class="cc-ico">⌨</div><div class="cc-info"><div class="cc-type">GITHUB</div><div class="cc-val">github.com/ctrl-Nix</div></div><div class="cc-arr">→</div></a>
+          <a class="cc" href="https://linkedin.com/in/shreyanshi-singh" target="_blank" rel="noopener"><div class="cc-ico">◈</div><div class="cc-info"><div class="cc-type">LINKEDIN</div><div class="cc-val">shreyanshi-singh</div></div><div class="cc-arr">→</div></a>
+          <div class="cc" style="cursor:default"><div class="cc-ico">📱</div><div class="cc-info"><div class="cc-type">PHONE</div><div class="cc-val">+91 82749 66385</div></div></div>
+        </div>
+        <div class="closing"><div class="cl-q">"I'm a first-year who codes like she has something to prove.<br/><span>Because she does.</span>"</div><div class="cl-sig">— Shreyanshi Singh // ctrl-Nix // 2025</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /SITE -->
+
+<script>
+'use strict';
+
+/* ═══ CURSOR ═══ */
+const c1=document.getElementById('c1'),c2=document.getElementById('c2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;c1.style.left=mx+'px';c1.style.top=my+'px'});
+(function r(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;c2.style.left=rx+'px';c2.style.top=ry+'px';requestAnimationFrame(r)})();
+document.querySelectorAll('button,a,[tabindex="0"],input,textarea').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
+});
+document.addEventListener('mousedown',()=>{c2.style.transform='translate(-50%,-50%) rotate(45deg) scale(.6)';setTimeout(()=>c2.style.transform='translate(-50%,-50%) rotate(45deg)',120)});
+
+/* ═══ BACKGROUND CIRCUIT CANVAS ═══ */
+(function(){
+  const c=document.getElementById('canvas-bg'),ctx=c.getContext('2d');
+  let W=c.width=innerWidth,H=c.height=innerHeight;
+  const nodes=[];
+  for(let i=0;i<60;i++)nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15,r:Math.random()*1.5+.5});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // connections
+    nodes.forEach((a,i)=>nodes.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<120){
+        const alpha=(1-d/120)*.06;
+        ctx.strokeStyle=`rgba(255,179,0,${alpha})`;
+        ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      }
+    }));
+    // dots
+    nodes.forEach(n=>{
+      ctx.fillStyle='rgba(255,179,0,.15)';
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill();
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>W)n.vx*=-1;
+      if(n.y<0||n.y>H)n.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize',()=>{W=c.width=innerWidth;H=c.height=innerHeight});
+})();
+
+/* ═══ PARTICLE CANVAS ═══ */
+(function(){
+  const c=document.getElementById('canvas-particles'),ctx=c.getContext('2d');
+  c.width=innerWidth;c.height=innerHeight;
+  const pts=Array.from({length:50},()=>({
+    x:Math.random()*c.width,y:c.height+10,
+    vx:(Math.random()-.5)*.4,vy:-(Math.random()*.4+.1),
+    life:Math.random(),
+    color:Math.random()>.6?[255,179,0]:Math.random()>.5?[0,212,255]:[139,92,246]
+  }));
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p=>{
+      p.life-=.004;
+      if(p.life<=0){p.y=c.height+5;p.x=Math.random()*c.width;p.life=.6+Math.random()*.4}
+      p.x+=p.vx;p.y+=p.vy;
+      const [r,g,b]=p.color;
+      ctx.globalAlpha=p.life*.3;
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.shadowColor=`rgba(${r},${g},${b},.8)`;ctx.shadowBlur=4;
+      ctx.beginPath();ctx.arc(p.x,p.y,Math.random()*.8+.3,0,Math.PI*2);ctx.fill();
+    });
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+    requestAnimationFrame(draw);
+  })();
+})();
+
+/* ═══ INTRO RAIN ═══ */
+(function(){
+  const c=document.getElementById('intro-canvas'),ctx=c.getContext('2d');
+  c.width=innerWidth;c.height=innerHeight;
+  const cols=Math.floor(c.width/16);
+  const drops=Array.from({length:cols},()=>Math.random()*c.height/16|0);
+  let alive=true;
+  function draw(){
+    if(!alive)return;
+    ctx.fillStyle='rgba(0,0,8,.09)';ctx.fillRect(0,0,c.width,c.height);
+    drops.forEach((y,i)=>{
+      const bright=Math.random()>.96;
+      ctx.fillStyle=bright?'rgba(255,179,0,.9)':'rgba(255,179,0,.25)';
+      ctx.font=`${bright?'bold':' '}12px 'Share Tech Mono',monospace`;
+      ctx.fillText(Math.random()>.5?'1':'0',i*16,y*16);
+      if(y*16>c.height&&Math.random()>.96)drops[i]=0;else drops[i]++;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window._killRain=()=>{alive=false};
+})();
+
+/* ═══ INTRO SEQUENCE ═══ */
+const L1=document.getElementById('h-title');
+const L2=document.getElementById('h-sub');
+const L3=document.getElementById('h-sub2');
+const LINE=document.getElementById('h-line');
+const CTA=document.getElementById('h-cta');
+const SCAN=document.getElementById('scan');
+const ARING=document.getElementById('alert-ring');
+const IBAR=document.getElementById('ibar');
+
+function typeOut(el,txt,spd,cb){
+  el.textContent='';let i=0;
+  const iv=setInterval(()=>{el.textContent+=txt[i];i++;if(i>=txt.length){clearInterval(iv);cb&&setTimeout(cb,200)}},spd);
+}
+L2.textContent='';L3.textContent='';
+
+// PROGRESS BAR
+let pct=0;const piv=setInterval(()=>{
+  pct=Math.min(pct+1.2,100);
+  IBAR.style.transition='width .15s';
+  IBAR.style.width=pct+'%';
+  if(pct>=100)clearInterval(piv);
+},60);
+
+// TIMELINE
+setTimeout(()=>{
+  // scan sweep
+  SCAN.style.opacity='1';
+  SCAN.style.transition='top 2s linear';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{SCAN.style.top='100vh'}));
+  setTimeout(()=>SCAN.style.opacity='0',2100);
+},500);
+
+setTimeout(()=>{
+  // red alert ring
+  ARING.style.transition='opacity .1s';ARING.style.opacity='1';
+  let f=0;const fiv=setInterval(()=>{
+    document.getElementById('INTRO').style.background=f%2?'rgba(255,0,0,.06)':'#000';
+    f++;if(f>12){clearInterval(fiv);document.getElementById('INTRO').style.background='#000'}
+  },50);
+},1000);
+
+setTimeout(()=>{
+  // HACKED text flash in
+  let v=0;const iv=setInterval(()=>{
+    L1.style.opacity=v%2?'0':'1';
+    L1.style.transform=v%2?'scale(1.3)':'scale(1)';
+    L1.style.transition=v%2?'none':'transform .3s ease';
+    v++;if(v>7){clearInterval(iv);L1.style.opacity='1';L1.style.transform='scale(1)'}
+  },80);
+},1500);
+
+setTimeout(()=>{
+  typeOut(L2,'INTRUSION DETECTED — SYSTEM COMPROMISED',38,()=>{
+    L2.style.opacity='1';
+    typeOut(L3,'ORIGIN: UNKNOWN // SIGNATURE: ctrl-Nix',32,()=>{
+      setTimeout(()=>{
+        LINE.style.width='min(400px,80vw)';
+        setTimeout(()=>{CTA.style.opacity='1';CTA.style.transform='translateY(0)'},600);
+      },300);
+    });
+  });
+  L2.style.opacity='1';L3.style.opacity='1';
+},2600);
+
+/* ═══ ENTER SITE ═══ */
+let entered=false;
+function enterSite(){
+  if(entered)return;entered=true;
+  if(window._killRain)window._killRain();
+  const strips=document.querySelectorAll('.wstripe');
+  strips.forEach((s,i)=>{
+    s.style.transformOrigin='left';
+    s.style.transition=`transform ${.15}s ${i*.018}s cubic-bezier(.7,0,.3,1)`;
+    s.style.transform='scaleX(1)';
+  });
+  setTimeout(()=>{
+    document.getElementById('INTRO').style.display='none';
+    document.getElementById('SITE').style.display='block';
+    document.getElementById('NAV').classList.add('up');
+    document.getElementById('PH').classList.add('on');
+    document.getElementById('PH').style.display='block';
+    setTimeout(()=>{
+      strips.forEach((s,i)=>{
+        s.style.transformOrigin='right';
+        s.style.transition=`transform ${.12}s ${i*.014}s cubic-bezier(.7,0,.3,1)`;
+        s.style.transform='scaleX(0)';
+      });
+    },60);
+    animDucky();
+  },340);
+}
+// Auto enter after 9s
+setTimeout(()=>{if(!entered)enterSite()},9000);
+
+/* ═══ NAVIGATION ═══ */
+const hist=['PH'];let curPage='PH';
+function go(id){
+  if(id===curPage)return;
+  hist.push(id);
+  transition(id);
+}
+function goBack(){
+  if(hist.length<2)return;
+  hist.pop();
+  transition(hist[hist.length-1]);
+}
+function transition(id){
+  const strips=document.querySelectorAll('.wstripe');
+  strips.forEach((s,i)=>{
+    s.style.transformOrigin='left';
+    s.style.transition=`transform ${.14}s ${i*.016}s cubic-bezier(.7,0,.3,1)`;
+    s.style.transform='scaleX(1)';
+  });
+  setTimeout(()=>{
+    document.getElementById(curPage).classList.remove('on');
+    if(curPage==='PH')document.getElementById('PH').style.display='none';
+    curPage=id;
+    const pg=document.getElementById(id);
+    pg.classList.add('on');
+    if(id==='PH')pg.style.display='block';
+    document.querySelectorAll('.nl').forEach(l=>l.classList.toggle('on',l.dataset.p===id));
+    const back=document.getElementById('BACK');
+    if(hist.length>1&&id!=='PH')back.classList.add('show');else back.classList.remove('show');
+    window.scrollTo({top:0});
+    if(id==='PA')setTimeout(animSkills,300);
+    if(id==='PRD')setTimeout(animDucky,200);
+    setTimeout(()=>{
+      strips.forEach((s,i)=>{
+        s.style.transformOrigin='right';
+        s.style.transition=`transform ${.11}s ${i*.012}s cubic-bezier(.7,0,.3,1)`;
+        s.style.transform='scaleX(0)';
+      });
+    },60);
+  },280);
+}
+
+/* ═══ CLOCK ═══ */
+setInterval(()=>{const d=new Date(),el=document.getElementById('ntime');if(el)el.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':')},1000);
+
+/* ═══ PROJ CARD HOVER ═══ */
+document.querySelectorAll('.pcard,.mcard').forEach(c=>{
+  c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect();c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%')});
+});
+
+/* ═══ SKILL BARS ═══ */
+function animSkills(){document.querySelectorAll('.sk-fill').forEach(b=>b.classList.add('go'))}
+
+/* ═══ DUCKY ANIM ═══ */
+function animDucky(){
+  const f1=document.getElementById('tf1'),f2=document.getElementById('tf2'),f3=document.getElementById('tf3');
+  if(f1){setTimeout(()=>f1.classList.add('go'),100);setTimeout(()=>f2.classList.add('go'),300);setTimeout(()=>f3.classList.add('go'),500)}
+}
+
+/* ═══ RUBBER DUCKY STEPS ═══ */
+function toggleStep(n){
+  const el=document.getElementById('step'+n);
+  const wasActive=el.classList.contains('active-step');
+  document.querySelectorAll('.step-card').forEach(s=>s.classList.remove('active-step'));
+  if(!wasActive)el.classList.add('active-step');
+}
+function activateStep(n){
+  document.querySelectorAll('.step-card').forEach(s=>s.classList.remove('active-step'));
+  const el=document.getElementById('step'+n);
+  if(el){el.classList.add('active-step');el.scrollIntoView({behavior:'smooth',block:'start'})}
+}
+
+/* ═══ CHAT DEMO ═══ */
+const chatScenario=[
+  {delay:800,type:'duck',text:'🟡 Ducky connected. Running payload...'},
+  {delay:1400,type:'system',text:'[ WIN+R PRESSED — RUN DIALOG OPENED ]'},
+  {delay:2200,type:'duck',text:'🟡 Typing: cmd.exe /c powershell -w hidden...'},
+  {delay:3000,type:'system',text:'[ CMD LAUNCHED IN BACKGROUND — HIDDEN ]'},
+  {delay:3800,type:'victim',text:'Hm, my PC just flashed for a second... weird.'},
+  {delay:4600,type:'duck',text:'🟡 Executing: whoami && hostname && ipconfig'},
+  {delay:5400,type:'system',text:'[ OUTPUT: DESKTOP-X7K2 // User: victim // IP: 192.168.1.105 ]'},
+  {delay:6200,type:'victim',text:'Probably just a Windows update...'},
+  {delay:7000,type:'duck',text:'🟡 Exfiltrating data to remote server...'},
+  {delay:7800,type:'system',text:'[ DATA SENT: 847KB — credentials, browser history, docs ]'},
+  {delay:8600,type:'duck',text:'🟡 Cleaning traces. Total time: 8.6 seconds.'},
+  {delay:9400,type:'system',text:'[ ATTACK COMPLETE — VICTIM STILL UNAWARE ]'},
+];
+let demoRunning=false;
+function runAttackDemo(){
+  if(demoRunning)return;
+  demoRunning=true;
+  const btn=document.getElementById('demo-run-btn');
+  btn.textContent='▶ RUNNING...';btn.style.opacity='.5';
+  document.getElementById('chat-status').textContent='● ATTACK IN PROGRESS';
+  chatScenario.forEach(({delay,type,text})=>{
+    setTimeout(()=>{
+      if(type==='duck')addMsg('duck','DUCKY',text);
+      else if(type==='victim')addMsg('victim','VICTIM_MACHINE',text);
+      else addSys(text);
+    },delay);
+  });
+  setTimeout(()=>{
+    document.getElementById('chat-status').textContent='● COMPLETE';
+    btn.textContent='▶ RUN ATTACK DEMO';btn.style.opacity='1';
+    demoRunning=false;
+  },10000);
+}
+function addMsg(side,label,text){
+  const msgs=document.getElementById('chat-msgs');
+  const d=document.createElement('div');
+  d.className=`msg msg-${side}`;
+  d.innerHTML=`<div class="msg-label">${label}</div><div class="msg-bubble">${text}</div>`;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+}
+function addSys(text){
+  const msgs=document.getElementById('chat-msgs');
+  const d=document.createElement('div');
+  d.className='msg msg-system';d.textContent=text;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+}
+function sendMsg(){
+  const inp=document.getElementById('chat-inp'),v=inp.value.trim();
+  if(!v)return;
+  addMsg('victim','YOU (VICTIM)',v);inp.value='';
+  // auto respond
+  setTimeout(()=>{
+    const replies=[
+      "🟡 Ducky doesn't care what you say. It's already done.",
+      "🟡 The attack finished 3 seconds after plug-in. Too late.",
+      "🟡 Your credentials are already on a remote server.",
+      "🟡 Next time: disable USB ports in BIOS. You've been taught.",
+    ];
+    addMsg('duck','DUCKY',replies[Math.floor(Math.random()*replies.length)]);
+  },800);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('chat-inp')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
+});
+function resetDemo(){
+  const msgs=document.getElementById('chat-msgs');
+  msgs.innerHTML='<div class="msg msg-system">[ SIMULATION RESET — DUCKY READY ]</div>';
+  document.getElementById('chat-status').textContent='● CONNECTED';
+  demoRunning=false;
+  const btn=document.getElementById('demo-run-btn');
+  btn.textContent='▶ RUN ATTACK DEMO';btn.style.opacity='1';
+}
+
+/* ═══ CTF ═══ */
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s.toLowerCase().trim()));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+const ANS={1:'FLAG{you_found_the_source_ctrl_nix_nods}',2:'ctrl-Nix',3:'shreyanshisreeansh',4:'Bhubaneshwar',5:'KIIT',6:'ctrl-nix'};
+const H={};(async()=>{for(const[k,v]of Object.entries(ANS))H[k]=await sha256(v)})();
+const openCh=new Set(),hintShown=new Set();let cPts=0,cSolved=0;
+const RANKS=['—','Curious','Lurker','Investigator','Tracker','Persistent','ctrl-Nix Approved 🏴'];
+function tog(n){
+  const b=document.getElementById('cb'+n),a=document.getElementById('ca'+n);
+  if(openCh.has(n)){openCh.delete(n);b.classList.remove('op');a.textContent='▾';a.classList.remove('op')}
+  else{openCh.add(n);b.classList.add('op');a.textContent='▴';a.classList.add('op')}
+}
+function toggleH(id){hintShown.add(id);const el=document.getElementById(id);el.style.display=el.style.display==='block'?'none':'block'}
+async function sub(n,pts){
+  const inp=document.getElementById('fi'+n),fb=document.getElementById('ff'+n);
+  fb.style.display='block';
+  if(await sha256(inp.value)===await sha256(ANS[n])){
+    inp.className='fi ok';inp.readOnly=true;
+    const pen=hintShown.has('h'+n)?(n===6?25:20):0,earned=pts-pen;
+    cPts+=earned;cSolved++;
+    document.getElementById('cp').textContent=cPts;document.getElementById('csolv').textContent=cSolved+'/6';document.getElementById('crnk').textContent=RANKS[Math.min(cSolved,6)];
+    document.getElementById('cs'+n).textContent='✓ SOLVED';document.getElementById('cs'+n).style.color='var(--amber)';
+    document.getElementById('c'+n).classList.add('solved');
+    fb.className='ffb fb-ok';fb.textContent=`✓ +${earned} pts${pen?' (hint −'+pen+')':''}`;
+    tPrint(`[+] Challenge ${n} solved — +${earned} pts`,'t-a');
+    if(cSolved===6)setTimeout(()=>{tPrint('ALL 6 SOLVED. ctrl-Nix Approved 🏴','t-a');tPrint('Final: '+cPts+' pts','t-b')},400);
+  }else{inp.className='fi ng';fb.className='ffb fb-ng';fb.textContent='✗ wrong — keep digging';setTimeout(()=>inp.className='fi',500)}
+}
+const tHist=[];let tHi=-1;
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp=document.getElementById('tinp');if(!inp)return;
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const v=inp.value.trim();inp.value='';if(v){tHist.unshift(v);tHi=-1;tRun(v)}}
+    else if(e.key==='ArrowUp'){e.preventDefault();tHi=Math.min(tHi+1,tHist.length-1);inp.value=tHist[tHi]||''}
+    else if(e.key==='ArrowDown'){e.preventDefault();tHi=Math.max(tHi-1,-1);inp.value=tHi<0?'':tHist[tHi]}
+  });
+  document.querySelector('.ct-term')?.addEventListener('click',()=>inp.focus());
+});
+function tPrint(txt,cls){const out=document.getElementById('tout');if(!out)return;const d=document.createElement('div');d.className='tline '+(cls||'t-m');d.textContent=txt;out.appendChild(d);out.scrollTop=out.scrollHeight}
+function tRun(raw){
+  const out=document.getElementById('tout');const d=document.createElement('div');d.className='tline';
+  d.innerHTML=`<span style="color:var(--amber)">$</span> <span style="color:rgba(255,179,0,.7)">${raw.replace(/</g,'&lt;')}</span>`;
+  out.appendChild(d);
+  const args=raw.trim().split(/\s+/),c0=args[0].toLowerCase();
+  if(c0==='clear'){out.innerHTML='';return}
+  if(c0==='help'){['decode [b64]       — Base64 decode','caesar [n] [text]  — Caesar cipher subtract n','binary [8bit...]   — binary to ASCII','hex [hexstring]    — hex to ASCII','whois              — target profile','clear              — clear terminal'].forEach(l=>tPrint(l,'t-b'));return}
+  if(c0==='decode'){const s=args.slice(1).join('').replace(/\s/g,'');try{tPrint('→ '+atob(s),'t-a')}catch{tPrint('invalid base64','t-r')}return}
+  if(c0==='caesar'){const n=parseInt(args[1]),txt=args.slice(2).join(' ');if(isNaN(n)||!txt){tPrint('usage: caesar [shift] [text]','t-y');return}tPrint('→ '+txt.replace(/[a-zA-Z]/g,c=>{const b=c<='Z'?65:97;return String.fromCharCode(((c.charCodeAt(0)-b+((26-(n%26))%26))%26)+b)}),'t-a');return}
+  if(c0==='binary'){const bits=args.slice(1).filter(b=>/^[01]{8}$/.test(b));if(!bits.length){tPrint('usage: binary 01001000 ...','t-y');return}tPrint('→ '+bits.map(b=>String.fromCharCode(parseInt(b,2))).join(''),'t-a');return}
+  if(c0==='hex'){const h=args.slice(1).join('').replace(/\s/g,'');try{tPrint('→ '+h.match(/.{1,2}/g).map(b=>String.fromCharCode(parseInt(b,16))).join(''),'t-a')}catch{tPrint('invalid hex','t-r')}return}
+  if(c0==='whois'){['Target: Shreyanshi Singh','Handle: ctrl-Nix','Uni: KIIT Bhubaneshwar','Spec: CyberSec + ML','Status: OPEN 🟡'].forEach(l=>tPrint(l,'t-b'));return}
+  tPrint(`${c0}: not found — try 'help'`,'t-r');
+}
+
+// Title flicker
+setInterval(()=>{document.title=document.title.includes('BREACH')?'ctrl-Nix // ██████':'ctrl-Nix // SYSTEM BREACH'},3000);
+</script>
+</body>
+</html>
