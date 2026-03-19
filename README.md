@@ -1,10 +1,11 @@
-# ctrl-Nix // SYSTEM BREACH
+# Leisure Portfolio // ctrl-Nix
 
-![Portfolio Preview Showcase](https://img.shields.io/badge/Status-ACTIVE-brightgreen?style=for-the-badge&logo=appveyor)
-![Cybersecurity](https://img.shields.io/badge/Focus-CyberSec_&_ML-blue)
-![University](https://img.shields.io/badge/University-KIIT_Bhubaneshwar-orange)
+[![Portfolio Preview Showcase](https://img.shields.io/badge/Status-Deployed_on_Vercel-black?style=for-the-badge&logo=vercel)](https://ctrl-nix-portfolio.vercel.app/)
+[![Cybersecurity](https://img.shields.io/badge/Focus-CyberSec_&_ML-blue)](https://github.com/ctrl-Nix)
+[![University](https://img.shields.io/badge/University-KIIT_Bhubaneshwar-orange)](https://kiit.ac.in/)
 
 An interactive, gamified, terminal-themed portfolio built for maximum immersion. 
+*Note: I built this for fun in my free time!*
 
 > *"Building intelligent security systems that don't exist yet."* — **Shreyanshi Singh (ctrl-Nix)**
 
