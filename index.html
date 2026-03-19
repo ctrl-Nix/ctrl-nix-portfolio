@@ -505,6 +505,7 @@
       font-size: 14px;
       font-weight: 700;
       font-style: italic;
+      letter-spacing: 2px;
       color: rgba(232, 244, 255, 0.6);
       padding: 0 16px;
       height: 64px;
@@ -582,9 +583,21 @@
       letter-spacing: 2px
     }
 
-    @media(max-width:700px) {
+    @media(max-width:900px) {
+      .nlogo, .nright {
+        display: none;
+      }
+      #NAV {
+        padding: 0 8px;
+      }
       .nlinks {
-        display: none
+        width: 100%;
+        justify-content: space-evenly;
+      }
+      .nl {
+        padding: 0 6px;
+        font-size: 11px;
+        letter-spacing: 0;
       }
     }
 
@@ -2000,6 +2013,8 @@
       font-style: italic;
       color: var(--red);
       line-height: 1;
+      width: 36px;
+      flex-shrink: 0;
       text-shadow: 0 0 10px rgba(255, 45, 85, .3)
     }
 
@@ -3013,10 +3028,11 @@
 
     :focus-visible {
       outline: 2px solid var(--red);
-      outline-offset: 3px
+      outline-offset: 3px;
+    }
 
-      /* ── GAMIFICATION EXTENSIONS ── */
-      .xp-hud {
+    /* ── GAMIFICATION EXTENSIONS ── */
+    .xp-hud {
         position: fixed;
         top: 15px;
         right: 24px;
@@ -3034,9 +3050,9 @@
         transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         transform: translateY(-100px);
         opacity: 0;
-      }
+    }
 
-      .xp-hud.show {
+    .xp-hud.show {
         transform: translateY(0);
         opacity: 1;
       }
