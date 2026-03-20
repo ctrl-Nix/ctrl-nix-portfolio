@@ -3219,6 +3219,42 @@
           text-shadow: none;
         }
       }
+
+      /* ── MOBILE SMOOTHNESS & DE-CLUTTER ── */
+      @media (max-width: 900px) {
+        #canvas-bg,
+        .scanlines,
+        .vignette,
+        .xp-hud,
+        #XPHUD,
+        .phud,
+        .phud-tl,
+        .status-hud,
+        .glitch-effect::before,
+        .glitch-effect::after,
+        #WIPE,
+        .hero-grid-bg,
+        .hero-ghost,
+        #CUR {
+          display: none !important;
+        }
+
+        /* Disable heavy or looping animations to save battery/CPU, keep reveal animations */
+        #c2, .logo-diamond, #h-title, #h-btn {
+          animation: none !important;
+        }
+
+        .shake-active,
+        .chromatic-glitch {
+          animation: none !important;
+          transform: none !important;
+          text-shadow: none !important;
+        }
+
+        body {
+          background-color: var(--void) !important;
+        }
+      }
   </style>
 </head>
 

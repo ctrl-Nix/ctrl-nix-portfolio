@@ -1,0 +1,29 @@
+1306: /* ── DOSSIER ── */
+2305: .chat-inp::placeholder {
+2852: .ct-inp::placeholder {
+3276: <button class="nl on" data-p="PH" onclick="go('PH')">MISSION</button>
+3277: <button class="nl" data-p="PA" onclick="go('PA')">DOSSIER</button>
+3305: SHREYANS<span class="an-red">HI</span>
+3306: <span class="an-ghost">SINGH</span>
+3343: <div class="ac-name">DOSSIER</div>
+3383: </div> <img class="agent-photo"
+3385: alt="Shreyanshi Singh" />
+3402: <!-- DOSSIER -->
+3411: <p class="ab-p">Real name: <strong>Shreyanshi Singh</strong>. Handle: <strong class="r">ctrl-Nix</strong>.
+3482: <div class="tl ta">NAME="Shreyanshi Singh"</div>
+3717: placeholder="Type as the victim..." autocomplete="off" /><button class="chat-send"
+3792: <div class="flag-row"><input type="text" class="fi" id="fi1" placeholder="FLAG{...}"
+3814: <div class="flag-row"><input type="text" class="fi" id="fi2" placeholder="GitHub handle"
+3831: <div class="dbl"><span class="dk">shift:</span> <span class="dw">len("Singh") = 5 &mdash;
+3838: <div class="flag-row"><input type="text" class="fi" id="fi3" placeholder="email username"
+3861: <div class="flag-row"><input type="text" class="fi" id="fi4" placeholder="City name"
+3891: <div class="flag-row"><input type="text" class="fi" id="fi5" placeholder="University abbreviation"
+3921: <div class="flag-row"><input type="text" class="fi" id="fi6" placeholder="Keyword from LinkedIn About"
+3941: placeholder="type a command..." autocomplete="off" spellcheck="false" /></div>
+3962: <a class="cc" href="mailto:shreyanshisreeansh@gmail.com">
+3966: <div class="cc-val">shreyanshisreeansh@gmail.com</div>
+3978: <a class="cc" href="https://www.linkedin.com/in/shreyanshi-singh-3324a8271/" target="_blank"
+3983: <div class="cc-val">linkedin.com/in/shreyanshi-singh-3324a8271</div>
+3998: <div class="cl-sig">&mdash; Shreyanshi Singh // ctrl-Nix // 2025</div>
+4488: var ANS = { 1: 'FLAG{you_found_the_source_ctrl_nix_nods}', 2: 'ctrl-Nix', 3: 'shreyanshisreeansh', 4: 'Bhubaneshwar', 5: 'KIIT', 6: 'ctrl-nix' };
+4585: ['Target: Shreyanshi Singh', 'Handle: ctrl-Nix', 'Uni: KIIT Bhubaneshwar', 'Spec: CyberSec + ML', 'Status: OPEN 🔴'].forEach(function (l) { tPrint(l, 't-b'); });
